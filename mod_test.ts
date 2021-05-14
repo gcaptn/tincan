@@ -11,10 +11,26 @@ import {
 
 describe("test", () => {
   it("should wait for promises", () => {
-    return new Promise((resolve) => setTimeout(resolve, 100));
+    return new Promise((resolve) => setTimeout(resolve, 20));
   });
 
-  it.skip("should log a pretty output for failing cases", () => {
+  it("should refuse to add hooks within a case", () => {
+    expect(() => {
+      beforeAll(() => {});
+    }).toThrow();
+  });
+
+  it("should refuse to add nodes within a case", () => {
+    expect(() => {
+      describe("_", () => {});
+    }).toThrow();
+
+    expect(() => {
+      it("_", () => {});
+    }).toThrow();
+  });
+
+  it("should log a pretty output for failing cases", () => {
     throw new Error("error");
   });
 
@@ -47,7 +63,7 @@ describe("test", () => {
 
 const hooksOrder: string[] = [];
 
-describe.only("hooks execution", () => {
+describe("hooks execution", () => {
   beforeAll(() => {
     hooksOrder.push("1 - beforeAll");
   });

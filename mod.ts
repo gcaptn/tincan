@@ -14,6 +14,7 @@ import { reportCase, reportEnd, reportStart } from "./report.ts";
 
 async function runNode(node: RootNode | DescribeNode | ItNode) {
   if (node instanceof RootNode) {
+    // root node
     reportStart(node);
     node.isRunning = true;
     const start = Date.now();
@@ -28,7 +29,8 @@ async function runNode(node: RootNode | DescribeNode | ItNode) {
     node.timeTaken = Date.now() - start;
     reportEnd(node);
   } else if (node instanceof DescribeNode) {
-    if (node.skip) return;
+    // describe node
+    if (node.skipped) return;
     for (const hook of node.beforeAll) await hook();
     for (const child of node.children) {
       await runNode(child);
@@ -38,7 +40,8 @@ async function runNode(node: RootNode | DescribeNode | ItNode) {
     }
     for (const hook of node.afterAll) await hook();
   } else {
-    if (node.skip) return;
+    // it node
+    if (node.skipped) return;
     for (const hook of node.beforeEach) await hook();
     const start = Date.now();
     try {

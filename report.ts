@@ -39,10 +39,12 @@ function formatNode(
   let str = "";
   if (node instanceof ItNode) {
     str += gray(
-      `${indent(depth)}•${node.skip ? " [SKIPPED]" : ""} ${node.headline}\n`,
+      `${indent(depth)}•${node.skipped ? " [SKIPPED]" : ""} ${node.headline}\n`,
     );
   } else if (node instanceof DescribeNode) {
-    str += `${indent(depth)}${node.skip ? "[SKIPPED] " : ""}${node.headline}\n`;
+    str += `${indent(depth)}${
+      node.skipped ? "[SKIPPED] " : ""
+    }${node.headline}\n`;
     node.children.forEach((child) => str += formatNode(child, depth + 1));
   } else {
     str = "\n";
@@ -70,7 +72,7 @@ function getAllCases(node: RootNode | DescribeNode) {
 export function reportEnd(node: RootNode) {
   const cases = getAllCases(node);
   const failedCases = cases.filter((node) => node.result === "FAIL");
-  const skippedCases = cases.filter((node) => node.skip);
+  const skippedCases = cases.filter((node) => node.skipped);
 
   console.log("");
 

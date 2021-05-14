@@ -7,8 +7,9 @@
 
 ## Features
 
-- Hooks (`beforeAll`, `afterAll`, `beforeEach`, `afterEach`)
 - Nested suites / cases
+- Hooks (`beforeAll`, `afterAll`, `beforeEach`, `afterEach`)
+- Focusing and skipping (`*.only()`, `*.skip()`)
 - Colorful output
 - Lightweight
 
