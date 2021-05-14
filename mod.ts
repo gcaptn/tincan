@@ -28,6 +28,7 @@ async function runNode(node: RootNode | DescribeNode | ItNode) {
     node.timeTaken = Date.now() - start;
     reportEnd(node);
   } else if (node instanceof DescribeNode) {
+    if (node.skip) return;
     for (const hook of node.beforeAll) await hook();
     for (const child of node.children) {
       await runNode(child);
@@ -37,6 +38,7 @@ async function runNode(node: RootNode | DescribeNode | ItNode) {
     }
     for (const hook of node.afterAll) await hook();
   } else {
+    if (node.skip) return;
     for (const hook of node.beforeEach) await hook();
     const start = Date.now();
     try {

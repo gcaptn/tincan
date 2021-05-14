@@ -12,6 +12,7 @@ export class RootNode {
   afterEach: Hook[] = [];
   result: TestResult = "PASS";
   isRunning = false;
+  hasFocused = false;
   timeTaken = 0;
 }
 
@@ -24,12 +25,20 @@ export class DescribeNode {
   afterAll: Hook[] = [];
   beforeEach: Hook[] = [];
   afterEach: Hook[] = [];
+  skip = false;
+  only = false;
+  hasFocused = false;
 
   constructor(headline: string, parent: RootNode | DescribeNode) {
     this.headline = headline;
     this.parent = parent;
     this.beforeEach = [...parent.beforeEach];
     this.afterEach = [...parent.afterEach];
+  }
+
+  setSkipped() {
+    this.skip = true;
+    this.children.forEach((child) => child.setSkipped());
   }
 }
 
@@ -42,6 +51,8 @@ export class ItNode {
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
+  skip = false;
+  only = false;
 
   constructor(
     headline: string,
@@ -53,6 +64,10 @@ export class ItNode {
     this.fn = fn;
     this.beforeEach = [...parent.beforeEach];
     this.afterEach = [...parent.afterEach];
+  }
+
+  setSkipped() {
+    this.skip = true;
   }
 }
 
@@ -67,7 +82,9 @@ function assertDescribeOrRootOnly(method: string) {
   }
 }
 
-export function describe(headline: string, fn: () => void) {
+// todo: child nodes shouldn't know their parents exist
+
+function addDescribeNode(headline: string, fn: () => void) {
   assertDescribeOrRootOnly("describe()");
   const parent = currentNode;
   const node = new DescribeNode(headline, parent);
@@ -75,14 +92,69 @@ export function describe(headline: string, fn: () => void) {
   currentNode = node;
   fn();
   currentNode = parent;
+  return node;
 }
 
-export function it(headline: string, fn: TestFunction) {
-  assertDescribeOrRootOnly("describe()");
+export function describe(headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  if (node.parent.hasFocused) {
+    node.parent.children.forEach((child) => {
+      if (child.only === false) {
+        child.setSkipped();
+      }
+    });
+  }
+}
+
+describe.skip = function (headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  node.setSkipped();
+};
+
+describe.only = function (headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  node.only = true;
+  node.parent.hasFocused = true;
+  node.parent.children.forEach((child) => {
+    if (child.only === false) {
+      child.setSkipped();
+    }
+  });
+};
+
+function addItNode(headline: string, fn: TestFunction) {
   const parent = currentNode;
   const node = new ItNode(headline, fn, parent);
   parent.children.push(node);
+  return node;
 }
+
+export function it(headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  if (node.parent.hasFocused) {
+    node.parent.children.forEach((child) => {
+      if (child.only === false) {
+        child.setSkipped();
+      }
+    });
+  }
+}
+
+it.skip = function (headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  node.setSkipped();
+};
+
+it.only = function (headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  node.only = true;
+  node.parent.hasFocused = true;
+  node.parent.children.forEach((child) => {
+    if (child.only === false) {
+      child.setSkipped();
+    }
+  });
+};
 
 export function beforeAll(fn: TestFunction) {
   assertDescribeOrRootOnly("beforeAll()");

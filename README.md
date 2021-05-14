@@ -1,6 +1,8 @@
-<img src="./preview.png" align="center"/>
+<p align="center">
+  <img src="./preview.png" align="center"/>
+  <h1 align="center">tincan</h1>
+</p>
 
-<h1 align="center">tincan</h1>
 <p align="center">A lightweight Jest-like testing library for Deno</p>
 
 ## Features

@@ -14,14 +14,40 @@ describe("test", () => {
     return new Promise((resolve) => setTimeout(resolve, 100));
   });
 
-  it("should log a pretty output for failing cases", () => {
+  it.skip("should log a pretty output for failing cases", () => {
     throw new Error("error");
+  });
+
+  it.skip("should not run skipped tests", () => {
+    throw new Error("this should not run");
+  });
+
+  describe.skip("skipped suites", () => {
+    it("should mark its children as skipped", () => {
+      throw new Error("this should not run");
+    });
+  });
+
+  describe("only", () => {
+    it.only("should only run focused nodes", () => {});
+    it("should mark everything else as skipped", () => {
+      throw new Error("this should not run");
+    });
+    describe.only("focused suites", () => {
+      it("should run cases inside", () => {});
+    });
+    describe.only("focused nested cases", () => {
+      it("should not run other cases", () => {
+        throw new Error("this should not run");
+      });
+      it.only("should focused cases", () => {});
+    });
   });
 });
 
 const hooksOrder: string[] = [];
 
-describe("hooks execution", () => {
+describe.only("hooks execution", () => {
   beforeAll(() => {
     hooksOrder.push("1 - beforeAll");
   });
