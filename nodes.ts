@@ -4,7 +4,21 @@ export type TestResult = "FAIL" | "PASS";
 
 export type TestFunction = () => void | Promise<void>;
 
-export class RootNode {
+type ParentNode = {
+  children: (DescribeNode | ItNode)[];
+  hasFocused: boolean;
+  updateFocusedChildren: () => void;
+};
+
+type ChildNode = {
+  parent: DescribeNode | RootNode;
+  skipped: boolean;
+  focused: boolean;
+  skip: () => void;
+  focus: () => void;
+};
+
+export class RootNode implements ParentNode {
   children: (DescribeNode | ItNode)[] = [];
   beforeAll: Hook[] = [];
   afterAll: Hook[] = [];
@@ -13,9 +27,20 @@ export class RootNode {
   result: TestResult = "PASS";
   isRunning = false;
   timeTaken = 0;
+  hasFocused = false;
+
+  updateFocusedChildren() {
+    if (this.hasFocused) {
+      this.children.forEach((child) => {
+        if (child.focused === false) {
+          child.skip();
+        }
+      });
+    }
+  }
 }
 
-export class DescribeNode {
+export class DescribeNode implements ParentNode, ChildNode {
   children: (DescribeNode | ItNode)[] = [];
   parent: RootNode | DescribeNode;
   headline: string;
@@ -24,6 +49,9 @@ export class DescribeNode {
   afterAll: Hook[] = [];
   beforeEach: Hook[] = [];
   afterEach: Hook[] = [];
+  skipped = false;
+  focused = false;
+  hasFocused = false;
 
   constructor(headline: string, parent: RootNode | DescribeNode) {
     this.headline = headline;
@@ -31,9 +59,30 @@ export class DescribeNode {
     this.beforeEach = [...parent.beforeEach];
     this.afterEach = [...parent.afterEach];
   }
+
+  skip() {
+    this.skipped = true;
+    this.children.forEach((child) => child.skip());
+  }
+
+  focus() {
+    this.focused = true;
+    this.parent.hasFocused = true;
+    this.parent.updateFocusedChildren();
+  }
+
+  updateFocusedChildren() {
+    if (this.hasFocused) {
+      this.children.forEach((child) => {
+        if (child.focused === false) {
+          child.skip();
+        }
+      });
+    }
+  }
 }
 
-export class ItNode {
+export class ItNode implements ChildNode {
   parent: DescribeNode | RootNode;
   headline: string;
   fn: TestFunction;
@@ -42,6 +91,8 @@ export class ItNode {
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
+  skipped = false;
+  focused = false;
 
   constructor(
     headline: string,
@@ -53,6 +104,16 @@ export class ItNode {
     this.fn = fn;
     this.beforeEach = [...parent.beforeEach];
     this.afterEach = [...parent.afterEach];
+  }
+
+  skip() {
+    this.skipped = true;
+  }
+
+  focus() {
+    this.focused = true;
+    this.parent.hasFocused = true;
+    this.parent.updateFocusedChildren();
   }
 }
 
@@ -67,7 +128,7 @@ function assertDescribeOrRootOnly(method: string) {
   }
 }
 
-export function describe(headline: string, fn: () => void) {
+function addDescribeNode(headline: string, fn: () => void) {
   assertDescribeOrRootOnly("describe()");
   const parent = currentNode;
   const node = new DescribeNode(headline, parent);
@@ -75,14 +136,50 @@ export function describe(headline: string, fn: () => void) {
   currentNode = node;
   fn();
   currentNode = parent;
+  return node;
 }
 
-export function it(headline: string, fn: TestFunction) {
-  assertDescribeOrRootOnly("describe()");
+export function describe(headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  if (node.parent.hasFocused && node.focused === false) {
+    node.skip();
+  }
+}
+
+describe.skip = function (headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  node.skip();
+};
+
+describe.only = function (headline: string, fn: () => void) {
+  const node = addDescribeNode(headline, fn);
+  node.focus();
+};
+
+function addItNode(headline: string, fn: TestFunction) {
+  assertDescribeOrRootOnly("it()");
   const parent = currentNode;
   const node = new ItNode(headline, fn, parent);
   parent.children.push(node);
+  return node;
 }
+
+export function it(headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  if (node.parent.hasFocused && node.focused === false) {
+    node.skip();
+  }
+}
+
+it.skip = function (headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  node.skip();
+};
+
+it.only = function (headline: string, fn: TestFunction) {
+  const node = addItNode(headline, fn);
+  node.focus();
+};
 
 export function beforeAll(fn: TestFunction) {
   assertDescribeOrRootOnly("beforeAll()");

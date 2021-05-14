@@ -11,11 +11,53 @@ import {
 
 describe("test", () => {
   it("should wait for promises", () => {
-    return new Promise((resolve) => setTimeout(resolve, 100));
+    return new Promise((resolve) => setTimeout(resolve, 20));
+  });
+
+  it("should refuse to add hooks within a case", () => {
+    expect(() => {
+      beforeAll(() => {});
+    }).toThrow();
+  });
+
+  it("should refuse to add nodes within a case", () => {
+    expect(() => {
+      describe("_", () => {});
+    }).toThrow();
+
+    expect(() => {
+      it("_", () => {});
+    }).toThrow();
   });
 
   it("should log a pretty output for failing cases", () => {
     throw new Error("error");
+  });
+
+  it.skip("should not run skipped tests", () => {
+    throw new Error("this should not run");
+  });
+
+  describe.skip("skipped suites", () => {
+    it("should mark its children as skipped", () => {
+      throw new Error("this should not run");
+    });
+  });
+
+  describe("only", () => {
+    it.only("should only run focused nodes", () => {});
+    it("should mark everything else as skipped", () => {
+      throw new Error("this should not run");
+    });
+    describe.only("focused suites", () => {
+      it("should run cases inside", () => {});
+    });
+    describe.only("focused nested cases", () => {
+      it("should not run other cases", () => {
+        throw new Error("this should not run");
+      });
+      it.only("should focused cases", () => {});
+    });
   });
 });
 
