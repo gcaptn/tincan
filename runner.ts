@@ -31,10 +31,10 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
 
     if (i === node.children.length - 1) {
       afterTasks = [...afterTasks, ...node.afterAll];
-      afterTasks.push(() => {
-        // node.timeTaken = Date.now() - start;
-        // reportEnd(node);
-      });
+      // afterTasks.push(() => {
+      //   node.timeTaken = Date.now() - start;
+      //   reportEnd(node);
+      // });
     }
 
     nodeRunner(child, beforeTasks, afterTasks);
