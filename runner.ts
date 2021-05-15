@@ -1,5 +1,5 @@
 import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import { reportCase, reportEnd, reportStart } from "./report.ts";
+import { getFullName, reportCase, reportEnd, reportStart } from "./report.ts";
 
 type NodeRunner = (
   node: RootNode | DescribeNode | ItNode,
@@ -7,97 +7,77 @@ type NodeRunner = (
   afterHooks: TestFunction[],
 ) => void;
 
-function runRoot(
-  node: RootNode,
-  nodeRunner: NodeRunner,
-) {
+function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   reportStart(node);
   node.isRunning = true;
-  let nodeStart: number;
+  let start: number;
 
   node.children.forEach((child, i) => {
-    let beforeTasks = [...node.beforeEach];
-    let afterTasks = [...node.afterEach];
+    let beforeTasks: TestFunction[] = [];
+    let afterTasks: TestFunction[] = [];
 
     if (i === 0) {
-      beforeTasks = [...node.beforeAll, ...beforeTasks];
-      beforeTasks.unshift(function () {
-        nodeStart = Date.now();
+      beforeTasks = [...node.beforeAll];
+      beforeTasks.unshift(() => {
+        start = Date.now();
       });
     }
 
-    let start: number;
-
-    beforeTasks.push(function () {
-      start = Date.now();
-    });
-
-    afterTasks.push(function () {
-      if (child instanceof ItNode) {
-        child.timeTaken = Date.now() - start;
-      }
-    });
-
-    afterTasks.push(function () {
+    afterTasks.push(() => {
       if (child.result === "FAIL") {
         node.result = "FAIL";
       }
     });
 
     if (i === node.children.length - 1) {
-      console.log("afterTask", child.headline, afterTasks)
       afterTasks = [...afterTasks, ...node.afterAll];
-      afterTasks.push(function () {
-        node.timeTaken = Date.now() - nodeStart;
+      afterTasks.push(() => {
+        node.timeTaken = Date.now() - start;
         reportEnd(node);
       });
     }
 
     nodeRunner(child, beforeTasks, afterTasks);
-  })
+  });
 }
 
 function runDescribe(
   node: DescribeNode,
-  beforeHooks: TestFunction[] = [],
-  afterHooks: TestFunction[] = [],
+  beforeTasks: TestFunction[],
+  afterTasks: TestFunction[],
   nodeRunner: NodeRunner,
 ) {
   node.children.forEach((child, i) => {
-    let beforeTasks = [...node.beforeEach];
-    let afterTasks = [...node.afterEach];
+    let childBeforeTasks: TestFunction[] = [];
+    let childAfterTasks: TestFunction[] = [];
 
     if (i === 0) {
-      beforeTasks = [...node.beforeAll, ...beforeHooks, ...beforeTasks];
+      childBeforeTasks = [...beforeTasks, ...node.beforeAll];
     }
 
-    afterTasks.push(function () {
+    childAfterTasks.push(() => {
       if (child.result === "FAIL") {
         node.result = "FAIL";
       }
     });
 
     if (i === node.children.length - 1) {
-      console.log("afterTask", child.headline, afterTasks)
-      //afterTasks.forEach(task => task())
-      console.log(afterHooks) // 1 afterEach, 1 afterall
-      // no way to insert 2. afterall in between
-      // todo: a before begin, after begin, before end, after end 
-      afterTasks = [...afterTasks, ...node.afterAll, ...afterHooks];
-      //afterTasks.forEach(task => task())
+      childAfterTasks = [...node.afterAll, ...afterTasks];
     }
 
-    nodeRunner(child, beforeTasks, afterTasks);
-  })
+    nodeRunner(child, childBeforeTasks, childAfterTasks);
+  });
 }
 
 function runIt(
   node: ItNode,
-  beforeHooks: TestFunction[] = [],
-  afterHooks: TestFunction[] = [],
+  beforeTasks: TestFunction[],
+  afterTasks: TestFunction[],
 ) {
   async function wrappedFn() {
-    for (const hook of beforeHooks) await hook();
+    for (const hook of beforeTasks) await hook();
+    for (const hook of node.beforeEach) await hook();
+
     const start = Date.now();
     try {
       await node.fn();
@@ -105,17 +85,19 @@ function runIt(
       node.result = "FAIL";
       node.error = err;
     }
-    
     node.timeTaken = Date.now() - start;
     reportCase(node);
-    for (const hook of afterHooks) await hook();
+
+    for (const hook of node.afterEach) await hook();
+    for (const hook of afterTasks) await hook();
+
     if (node.error) {
       throw node.error;
     }
   }
 
   Deno.test({
-    name: node.headline,
+    name: getFullName(node),
     fn: wrappedFn,
     ignore: node.skipped,
   });

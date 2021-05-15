@@ -16,7 +16,7 @@ function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
   return ancestors.reverse();
 }
 
-function getFullName(node: ItNode) {
+export function getFullName(node: ItNode) {
   const hierarchy = getAncestry(node)
     .map((node: DescribeNode | ItNode) => gray(node.headline));
   hierarchy.push(cyan(node.headline));

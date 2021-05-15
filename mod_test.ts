@@ -64,7 +64,6 @@ describe("test", () => {
 describe("hooks", () => {
   let hooksOrder: string[] = [];
 
-
   describe("hooks execution order", () => {
     beforeAll(() => {
       hooksOrder.push("1 - beforeAll");
@@ -90,11 +89,9 @@ describe("hooks", () => {
         hooksOrder.push("2 - beforeEach");
       });
       afterEach(() => {
-        console.log("2 - aftereac")
         hooksOrder.push("2 - afterEach");
       });
       afterAll(() => {
-        console.log("2 - afterAll")
         hooksOrder.push("2 - afterAll");
       });
       it("a", () => {
