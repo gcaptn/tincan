@@ -1,11 +1,8 @@
 import { runNode } from "./runner.ts";
 import { root } from "./nodes.ts";
 
-export async function run() {
-  const success = await runNode(root);
-  if (!success) {
-    Deno.exit(1);
-  }
+export function run() {
+  runNode(root);
 }
 
 export {

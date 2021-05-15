@@ -56,8 +56,6 @@ export class DescribeNode implements ParentNode, ChildNode {
   constructor(headline: string, parent: RootNode | DescribeNode) {
     this.headline = headline;
     this.parent = parent;
-    this.beforeEach = [...parent.beforeEach];
-    this.afterEach = [...parent.afterEach];
   }
 
   skip() {
@@ -86,8 +84,6 @@ export class ItNode implements ChildNode {
   parent: DescribeNode | RootNode;
   headline: string;
   fn: TestFunction;
-  beforeEach: Hook[] = [];
-  afterEach: Hook[] = [];
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
@@ -102,8 +98,6 @@ export class ItNode implements ChildNode {
     this.parent = parent;
     this.headline = headline;
     this.fn = fn;
-    this.beforeEach = [...parent.beforeEach];
-    this.afterEach = [...parent.afterEach];
   }
 
   skip() {
@@ -141,7 +135,7 @@ function addDescribeNode(headline: string, fn: () => void) {
 
 export function describe(headline: string, fn: () => void) {
   const node = addDescribeNode(headline, fn);
-  if (node.parent.hasFocused && node.focused === false) {
+  if (node.parent.hasFocused) {
     node.skip();
   }
 }
@@ -166,7 +160,7 @@ function addItNode(headline: string, fn: TestFunction) {
 
 export function it(headline: string, fn: TestFunction) {
   const node = addItNode(headline, fn);
-  if (node.parent.hasFocused && node.focused === false) {
+  if (node.parent.hasFocused) {
     node.skip();
   }
 }

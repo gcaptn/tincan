@@ -30,7 +30,7 @@ describe("test", () => {
     }).toThrow();
   });
 
-  it("should log a pretty output for failing cases", () => {
+  it.skip("should log a pretty output for failing cases", () => {
     throw new Error("error");
   });
 
@@ -61,45 +61,48 @@ describe("test", () => {
   });
 });
 
-const hooksOrder: string[] = [];
+describe("hooks", () => {
+  let hooksOrder: string[] = [];
 
-describe("hooks execution", () => {
-  beforeAll(() => {
-    hooksOrder.push("1 - beforeAll");
-  });
-  beforeEach(() => {
-    hooksOrder.push("1 - beforeEach");
-  });
-  afterEach(() => {
-    hooksOrder.push("1 - afterEach");
-  });
-  afterAll(() => {
-    hooksOrder.push("1 - afterAll");
-  });
-  it("a", () => {
-    hooksOrder.push("1 - it");
-  });
 
-  describe("nested describe", () => {
+  describe("hooks execution order", () => {
     beforeAll(() => {
-      hooksOrder.push("2 - beforeAll");
+      hooksOrder.push("1 - beforeAll");
     });
     beforeEach(() => {
-      hooksOrder.push("2 - beforeEach");
+      hooksOrder.push("1 - beforeEach");
     });
     afterEach(() => {
-      hooksOrder.push("2 - afterEach");
+      hooksOrder.push("1 - afterEach");
     });
     afterAll(() => {
-      hooksOrder.push("2 - afterAll");
+      hooksOrder.push("1 - afterAll");
     });
     it("a", () => {
-      hooksOrder.push("2 - it");
+      hooksOrder.push("1 - it");
+    });
+
+    describe("nested describe", () => {
+      beforeAll(() => {
+        hooksOrder.push("2 - beforeAll");
+      });
+      beforeEach(() => {
+        hooksOrder.push("2 - beforeEach");
+      });
+      afterEach(() => {
+        console.log("2 - aftereac")
+        hooksOrder.push("2 - afterEach");
+      });
+      afterAll(() => {
+        console.log("2 - afterAll")
+        hooksOrder.push("2 - afterAll");
+      });
+      it("a", () => {
+        hooksOrder.push("2 - it");
+      });
     });
   });
-});
 
-describe("hooks", () => {
   it("executes in the correct order", () => {
     expect(hooksOrder).toEqual([
       "1 - beforeAll",

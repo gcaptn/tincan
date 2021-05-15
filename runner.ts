@@ -1,68 +1,136 @@
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
 import { reportCase, reportEnd, reportStart } from "./report.ts";
 
-type NodeRunner = (node: RootNode | DescribeNode | ItNode) => Promise<boolean>;
+type NodeRunner = (
+  node: RootNode | DescribeNode | ItNode,
+  beforeHooks: TestFunction[],
+  afterHooks: TestFunction[],
+) => void;
 
-async function runRoot(
+function runRoot(
   node: RootNode,
   nodeRunner: NodeRunner,
-): Promise<boolean> {
+) {
   reportStart(node);
   node.isRunning = true;
-  const start = Date.now();
-  for (const hook of node.beforeAll) await hook();
-  for (const child of node.children) {
-    await nodeRunner(child);
-    if (child.result === "FAIL") {
-      node.result = "FAIL";
+  let nodeStart: number;
+
+  node.children.forEach((child, i) => {
+    let beforeTasks = [...node.beforeEach];
+    let afterTasks = [...node.afterEach];
+
+    if (i === 0) {
+      beforeTasks = [...node.beforeAll, ...beforeTasks];
+      beforeTasks.unshift(function () {
+        nodeStart = Date.now();
+      });
     }
-  }
-  for (const hook of node.afterAll) await hook();
-  node.timeTaken = Date.now() - start;
-  reportEnd(node);
-  return node.result === "PASS";
+
+    let start: number;
+
+    beforeTasks.push(function () {
+      start = Date.now();
+    });
+
+    afterTasks.push(function () {
+      if (child instanceof ItNode) {
+        child.timeTaken = Date.now() - start;
+      }
+    });
+
+    afterTasks.push(function () {
+      if (child.result === "FAIL") {
+        node.result = "FAIL";
+      }
+    });
+
+    if (i === node.children.length - 1) {
+      console.log("afterTask", child.headline, afterTasks)
+      afterTasks = [...afterTasks, ...node.afterAll];
+      afterTasks.push(function () {
+        node.timeTaken = Date.now() - nodeStart;
+        reportEnd(node);
+      });
+    }
+
+    nodeRunner(child, beforeTasks, afterTasks);
+  })
 }
 
-async function runDescribe(
+function runDescribe(
   node: DescribeNode,
+  beforeHooks: TestFunction[] = [],
+  afterHooks: TestFunction[] = [],
   nodeRunner: NodeRunner,
-): Promise<boolean> {
-  if (node.skipped) return true;
-  for (const hook of node.beforeAll) await hook();
-  for (const child of node.children) {
-    await nodeRunner(child);
-    if (child.result === "FAIL") {
+) {
+  node.children.forEach((child, i) => {
+    let beforeTasks = [...node.beforeEach];
+    let afterTasks = [...node.afterEach];
+
+    if (i === 0) {
+      beforeTasks = [...node.beforeAll, ...beforeHooks, ...beforeTasks];
+    }
+
+    afterTasks.push(function () {
+      if (child.result === "FAIL") {
+        node.result = "FAIL";
+      }
+    });
+
+    if (i === node.children.length - 1) {
+      console.log("afterTask", child.headline, afterTasks)
+      //afterTasks.forEach(task => task())
+      console.log(afterHooks) // 1 afterEach, 1 afterall
+      // no way to insert 2. afterall in between
+      // todo: a before begin, after begin, before end, after end 
+      afterTasks = [...afterTasks, ...node.afterAll, ...afterHooks];
+      //afterTasks.forEach(task => task())
+    }
+
+    nodeRunner(child, beforeTasks, afterTasks);
+  })
+}
+
+function runIt(
+  node: ItNode,
+  beforeHooks: TestFunction[] = [],
+  afterHooks: TestFunction[] = [],
+) {
+  async function wrappedFn() {
+    for (const hook of beforeHooks) await hook();
+    const start = Date.now();
+    try {
+      await node.fn();
+    } catch (err) {
       node.result = "FAIL";
+      node.error = err;
+    }
+    
+    node.timeTaken = Date.now() - start;
+    reportCase(node);
+    for (const hook of afterHooks) await hook();
+    if (node.error) {
+      throw node.error;
     }
   }
-  for (const hook of node.afterAll) await hook();
-  return node.result === "PASS";
+
+  Deno.test({
+    name: node.headline,
+    fn: wrappedFn,
+    ignore: node.skipped,
+  });
 }
 
-async function runIt(node: ItNode): Promise<boolean> {
-  if (node.skipped) return true;
-  for (const hook of node.beforeEach) await hook();
-  const start = Date.now();
-  try {
-    await node.fn();
-  } catch (err) {
-    node.result = "FAIL";
-    node.error = err;
-  }
-  node.timeTaken = Date.now() - start;
-  reportCase(node);
-  for (const hook of node.afterEach) await hook();
-  return node.result === "PASS";
-}
-
-export async function runNode(
+export function runNode(
   node: RootNode | DescribeNode | ItNode,
-): Promise<boolean> {
+  beforeHooks: TestFunction[] = [],
+  afterHooks: TestFunction[] = [],
+) {
   if (node instanceof RootNode) {
-    return await runRoot(node, runNode);
+    runRoot(node, runNode);
   } else if (node instanceof DescribeNode) {
-    return await runDescribe(node, runNode);
+    runDescribe(node, beforeHooks, afterHooks, runNode);
   } else {
-    return await runIt(node);
+    runIt(node, beforeHooks, afterHooks);
   }
 }
