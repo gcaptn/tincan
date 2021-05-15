@@ -1,68 +1,118 @@
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
-import { reportCase, reportEnd, reportStart } from "./report.ts";
+import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
+import { getFullName, reportStart } from "./report.ts";
 
-type NodeRunner = (node: RootNode | DescribeNode | ItNode) => Promise<boolean>;
+type NodeRunner = (
+  node: RootNode | DescribeNode | ItNode,
+  beforeHooks: TestFunction[],
+  afterHooks: TestFunction[],
+) => void;
 
-async function runRoot(
-  node: RootNode,
-  nodeRunner: NodeRunner,
-): Promise<boolean> {
+function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   reportStart(node);
   node.isRunning = true;
-  const start = Date.now();
-  for (const hook of node.beforeAll) await hook();
-  for (const child of node.children) {
-    await nodeRunner(child);
-    if (child.result === "FAIL") {
-      node.result = "FAIL";
+  // let start: number;
+
+  node.children.forEach((child, i) => {
+    let beforeTasks: TestFunction[] = [];
+    let afterTasks: TestFunction[] = [];
+
+    if (i === 0) {
+      beforeTasks = [...node.beforeAll];
+      // beforeTasks.unshift(() => {
+      //   start = Date.now();
+      // });
     }
-  }
-  for (const hook of node.afterAll) await hook();
-  node.timeTaken = Date.now() - start;
-  reportEnd(node);
-  return node.result === "PASS";
+
+    afterTasks.push(() => {
+      if (child.result === "FAIL") {
+        node.result = "FAIL";
+      }
+    });
+
+    if (i === node.children.length - 1) {
+      afterTasks = [...afterTasks, ...node.afterAll];
+      afterTasks.push(() => {
+        // node.timeTaken = Date.now() - start;
+        // reportEnd(node);
+      });
+    }
+
+    nodeRunner(child, beforeTasks, afterTasks);
+  });
 }
 
-async function runDescribe(
+function runDescribe(
   node: DescribeNode,
+  beforeTasks: TestFunction[],
+  afterTasks: TestFunction[],
   nodeRunner: NodeRunner,
-): Promise<boolean> {
-  if (node.skipped) return true;
-  for (const hook of node.beforeAll) await hook();
-  for (const child of node.children) {
-    await nodeRunner(child);
-    if (child.result === "FAIL") {
+) {
+  node.children.forEach((child, i) => {
+    let childBeforeTasks: TestFunction[] = [];
+    let childAfterTasks: TestFunction[] = [];
+
+    if (i === 0) {
+      childBeforeTasks = [...beforeTasks, ...node.beforeAll];
+    }
+
+    childAfterTasks.push(() => {
+      if (child.result === "FAIL") {
+        node.result = "FAIL";
+      }
+    });
+
+    if (i === node.children.length - 1) {
+      childAfterTasks = [...node.afterAll, ...afterTasks];
+    }
+
+    nodeRunner(child, childBeforeTasks, childAfterTasks);
+  });
+}
+
+function runIt(
+  node: ItNode,
+  beforeTasks: TestFunction[],
+  afterTasks: TestFunction[],
+) {
+  async function wrappedFn() {
+    for (const hook of beforeTasks) await hook();
+    for (const hook of node.beforeEach) await hook();
+
+    const start = Date.now();
+    try {
+      await node.fn();
+    } catch (err) {
       node.result = "FAIL";
+      node.error = err;
+    }
+    node.timeTaken = Date.now() - start;
+    // reportCase(node);
+
+    for (const hook of node.afterEach) await hook();
+    for (const hook of afterTasks) await hook();
+
+    if (node.error) {
+      throw node.error;
     }
   }
-  for (const hook of node.afterAll) await hook();
-  return node.result === "PASS";
+
+  Deno.test({
+    name: getFullName(node),
+    fn: wrappedFn,
+    ignore: node.skipped,
+  });
 }
 
-async function runIt(node: ItNode): Promise<boolean> {
-  if (node.skipped) return true;
-  for (const hook of node.beforeEach) await hook();
-  const start = Date.now();
-  try {
-    await node.fn();
-  } catch (err) {
-    node.result = "FAIL";
-    node.error = err;
-  }
-  node.timeTaken = Date.now() - start;
-  reportCase(node);
-  for (const hook of node.afterEach) await hook();
-  return node.result === "PASS";
-}
-
-export async function runNode(
+export function runNode(
   node: RootNode | DescribeNode | ItNode,
-): Promise<boolean> {
+  beforeHooks: TestFunction[] = [],
+  afterHooks: TestFunction[] = [],
+) {
   if (node instanceof RootNode) {
-    return await runRoot(node, runNode);
+    runRoot(node, runNode);
   } else if (node instanceof DescribeNode) {
-    return await runDescribe(node, runNode);
+    runDescribe(node, beforeHooks, afterHooks, runNode);
   } else {
-    return await runIt(node);
+    runIt(node, beforeHooks, afterHooks);
   }
 }

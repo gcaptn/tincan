@@ -141,7 +141,7 @@ function addDescribeNode(headline: string, fn: () => void) {
 
 export function describe(headline: string, fn: () => void) {
   const node = addDescribeNode(headline, fn);
-  if (node.parent.hasFocused && node.focused === false) {
+  if (node.parent.hasFocused) {
     node.skip();
   }
 }
@@ -166,7 +166,7 @@ function addItNode(headline: string, fn: TestFunction) {
 
 export function it(headline: string, fn: TestFunction) {
   const node = addItNode(headline, fn);
-  if (node.parent.hasFocused && node.focused === false) {
+  if (node.parent.hasFocused) {
     node.skip();
   }
 }

@@ -30,7 +30,7 @@ describe("test", () => {
     }).toThrow();
   });
 
-  it("should log a pretty output for failing cases", () => {
+  it.skip("should log a pretty output for failing cases", () => {
     throw new Error("error");
   });
 
@@ -61,47 +61,47 @@ describe("test", () => {
   });
 });
 
-const hooksOrder: string[] = [];
+describe("hooks", () => {
+  const order: string[] = [];
 
-describe("hooks execution", () => {
-  beforeAll(() => {
-    hooksOrder.push("1 - beforeAll");
-  });
-  beforeEach(() => {
-    hooksOrder.push("1 - beforeEach");
-  });
-  afterEach(() => {
-    hooksOrder.push("1 - afterEach");
-  });
-  afterAll(() => {
-    hooksOrder.push("1 - afterAll");
-  });
-  it("a", () => {
-    hooksOrder.push("1 - it");
-  });
-
-  describe("nested describe", () => {
+  describe("hooks execution order", () => {
     beforeAll(() => {
-      hooksOrder.push("2 - beforeAll");
+      order.push("1 - beforeAll");
     });
     beforeEach(() => {
-      hooksOrder.push("2 - beforeEach");
+      order.push("1 - beforeEach");
     });
     afterEach(() => {
-      hooksOrder.push("2 - afterEach");
+      order.push("1 - afterEach");
     });
     afterAll(() => {
-      hooksOrder.push("2 - afterAll");
+      order.push("1 - afterAll");
     });
     it("a", () => {
-      hooksOrder.push("2 - it");
+      order.push("1 - it");
+    });
+
+    describe("nested describe", () => {
+      beforeAll(() => {
+        order.push("2 - beforeAll");
+      });
+      beforeEach(() => {
+        order.push("2 - beforeEach");
+      });
+      afterEach(() => {
+        order.push("2 - afterEach");
+      });
+      afterAll(() => {
+        order.push("2 - afterAll");
+      });
+      it("a", () => {
+        order.push("2 - it");
+      });
     });
   });
-});
 
-describe("hooks", () => {
   it("executes in the correct order", () => {
-    expect(hooksOrder).toEqual([
+    expect(order).toEqual([
       "1 - beforeAll",
       "1 - beforeEach",
       "1 - it",
