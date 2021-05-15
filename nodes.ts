@@ -1,5 +1,3 @@
-export type Hook = () => void;
-
 export type TestResult = "FAIL" | "PASS";
 
 export type TestFunction = () => void | Promise<void>;
@@ -20,10 +18,10 @@ type ChildNode = {
 
 export class RootNode implements ParentNode {
   children: (DescribeNode | ItNode)[] = [];
-  beforeAll: Hook[] = [];
-  afterAll: Hook[] = [];
-  beforeEach: Hook[] = [];
-  afterEach: Hook[] = [];
+  beforeAll: TestFunction[] = [];
+  afterAll: TestFunction[] = [];
+  beforeEach: TestFunction[] = [];
+  afterEach: TestFunction[] = [];
   result: TestResult = "PASS";
   isRunning = false;
   timeTaken = 0;
@@ -45,10 +43,10 @@ export class DescribeNode implements ParentNode, ChildNode {
   parent: RootNode | DescribeNode;
   headline: string;
   result: TestResult = "PASS";
-  beforeAll: Hook[] = [];
-  afterAll: Hook[] = [];
-  beforeEach: Hook[] = [];
-  afterEach: Hook[] = [];
+  beforeAll: TestFunction[] = [];
+  afterAll: TestFunction[] = [];
+  beforeEach: TestFunction[] = [];
+  afterEach: TestFunction[] = [];
   skipped = false;
   focused = false;
   hasFocused = false;
@@ -86,8 +84,8 @@ export class ItNode implements ChildNode {
   parent: DescribeNode | RootNode;
   headline: string;
   fn: TestFunction;
-  beforeEach: Hook[] = [];
-  afterEach: Hook[] = [];
+  beforeEach: TestFunction[] = [];
+  afterEach: TestFunction[] = [];
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
@@ -117,86 +115,93 @@ export class ItNode implements ChildNode {
   }
 }
 
-export const root = new RootNode();
-let currentNode: RootNode | DescribeNode = root;
+export class Environment {
+  root: RootNode;
+  private currentNode: RootNode | DescribeNode;
 
-function assertDescribeOrRootOnly(method: string) {
-  if (root.isRunning) {
-    throw new Error(
-      `${method} can only be called at the top level or directly within describe()`,
-    );
+  constructor() {
+    this.root = new RootNode();
+    this.currentNode = this.root;
   }
-}
 
-function addDescribeNode(headline: string, fn: () => void) {
-  assertDescribeOrRootOnly("describe()");
-  const parent = currentNode;
-  const node = new DescribeNode(headline, parent);
-  parent.children.push(node);
-  currentNode = node;
-  fn();
-  currentNode = parent;
-  return node;
-}
+  private assertDescribeOrRootOnly(method: string) {
+    if (this.root.isRunning) {
+      throw new Error(
+        `${method} can only be called at the top level or directly within describe()`,
+      );
+    }
+  }
 
-export function describe(headline: string, fn: () => void) {
-  const node = addDescribeNode(headline, fn);
-  if (node.parent.hasFocused) {
+  private addDescribeNode(headline: string, fn: () => void) {
+    this.assertDescribeOrRootOnly("describe()");
+    const parent = this.currentNode;
+    const node = new DescribeNode(headline, parent);
+    parent.children.push(node);
+    this.currentNode = node;
+    fn();
+    this.currentNode = parent;
+    return node;
+  }
+
+  describe(headline: string, fn: () => void) {
+    const node = this.addDescribeNode(headline, fn);
+    if (node.parent.hasFocused) {
+      node.skip();
+    }
+  }
+
+  describeSkip(headline: string, fn: () => void) {
+    const node = this.addDescribeNode(headline, fn);
     node.skip();
   }
-}
 
-describe.skip = function (headline: string, fn: () => void) {
-  const node = addDescribeNode(headline, fn);
-  node.skip();
-};
+  describeOnly(headline: string, fn: () => void) {
+    const node = this.addDescribeNode(headline, fn);
+    node.focus();
+  }
 
-describe.only = function (headline: string, fn: () => void) {
-  const node = addDescribeNode(headline, fn);
-  node.focus();
-};
+  private addItNode(headline: string, fn: TestFunction) {
+    this.assertDescribeOrRootOnly("it()");
+    const parent = this.currentNode;
+    const node = new ItNode(headline, fn, parent);
+    parent.children.push(node);
+    return node;
+  }
 
-function addItNode(headline: string, fn: TestFunction) {
-  assertDescribeOrRootOnly("it()");
-  const parent = currentNode;
-  const node = new ItNode(headline, fn, parent);
-  parent.children.push(node);
-  return node;
-}
+  it(headline: string, fn: TestFunction) {
+    const node = this.addItNode(headline, fn);
+    if (node.parent.hasFocused) {
+      node.skip();
+    }
+  }
 
-export function it(headline: string, fn: TestFunction) {
-  const node = addItNode(headline, fn);
-  if (node.parent.hasFocused) {
+  itSkip(headline: string, fn: TestFunction) {
+    const node = this.addItNode(headline, fn);
     node.skip();
   }
-}
 
-it.skip = function (headline: string, fn: TestFunction) {
-  const node = addItNode(headline, fn);
-  node.skip();
-};
+  itOnly(headline: string, fn: TestFunction) {
+    const node = this.addItNode(headline, fn);
+    node.focus();
+  }
 
-it.only = function (headline: string, fn: TestFunction) {
-  const node = addItNode(headline, fn);
-  node.focus();
-};
+  beforeAll(fn: TestFunction) {
+    this.assertDescribeOrRootOnly("beforeAll()");
+    this.currentNode.beforeAll.push(fn);
+  }
 
-export function beforeAll(fn: TestFunction) {
-  assertDescribeOrRootOnly("beforeAll()");
-  currentNode.beforeAll.push(fn);
-}
+  beforeEach(fn: TestFunction) {
+    this.assertDescribeOrRootOnly("beforeEach()");
+    this.currentNode.beforeEach.push(fn);
+  }
 
-export function afterAll(fn: TestFunction) {
-  assertDescribeOrRootOnly("afterAll()");
-  currentNode.afterAll.unshift(fn);
-}
+  afterAll(fn: TestFunction) {
+    this.assertDescribeOrRootOnly("afterAll()");
+    this.currentNode.afterAll.unshift(fn);
+  }
 
-export function beforeEach(fn: TestFunction) {
-  assertDescribeOrRootOnly("beforeEach()");
-  currentNode.beforeEach.push(fn);
-}
-
-export function afterEach(fn: TestFunction) {
-  assertDescribeOrRootOnly("afterEach()");
-  currentNode.afterEach.unshift(fn);
+  afterEach(fn: TestFunction) {
+    this.assertDescribeOrRootOnly("afterEach()");
+    this.currentNode.afterEach.unshift(fn);
+  }
 }
