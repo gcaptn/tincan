@@ -1,10 +1,12 @@
 import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
 import {
-  cyan,
+  bold,
   gray,
-  green,
-  red,
+  // green,
+  // red,
 } from "https://deno.land/std@0.95.0/fmt/colors.ts";
+
+const log = console.log;
 
 function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
   const ancestors: DescribeNode[] = [];
@@ -19,14 +21,15 @@ function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
 export function getFullName(node: ItNode) {
   const hierarchy = getAncestry(node)
     .map((node: DescribeNode | ItNode) => gray(node.headline));
-  hierarchy.push(cyan(node.headline));
+  hierarchy.push(bold(node.headline));
   return hierarchy.join(" > ");
 }
 
-export function reportCase(node: ItNode) {
+// Deno.test's reporter cannot be silenced as of now
+/* export function reportCase(node: ItNode) {
   const result = node.result === "PASS" ? green(node.result) : red(node.result);
-  console.log(`${result} ${getFullName(node)} (${node.timeTaken} ms)`);
-}
+  log(`${result} ${getFullName(node)} (${node.timeTaken} ms)\n`);
+} */
 
 function indent(depth: number) {
   return "  ".repeat(depth);
@@ -39,12 +42,10 @@ function formatNode(
   let str = "";
   if (node instanceof ItNode) {
     str += gray(
-      `${indent(depth)}•${node.skipped ? " [SKIPPED]" : ""} ${node.headline}\n`,
+      `${indent(depth)}•${node.skipped ? " [SKIP]" : ""} ${node.headline}\n`,
     );
   } else if (node instanceof DescribeNode) {
-    str += `${indent(depth)}${
-      node.skipped ? "[SKIPPED] " : ""
-    }${node.headline}\n`;
+    str += `${indent(depth)}${node.skipped ? "[SKIP] " : ""}${node.headline}\n`;
     node.children.forEach((child) => str += formatNode(child, depth + 1));
   } else {
     str = "\n";
@@ -54,10 +55,10 @@ function formatNode(
 }
 
 export function reportStart(node: RootNode) {
-  console.log(formatNode(node));
+  log(formatNode(node));
 }
 
-function getAllCases(node: RootNode | DescribeNode) {
+/* function getAllCases(node: RootNode | DescribeNode) {
   let nodes: ItNode[] = [];
   node.children.forEach((child) => {
     if (child instanceof ItNode) {
@@ -67,9 +68,9 @@ function getAllCases(node: RootNode | DescribeNode) {
     }
   });
   return nodes;
-}
+} */
 
-export function reportEnd(node: RootNode) {
+/* export function reportEnd(node: RootNode) {
   const cases = getAllCases(node);
   const failedCases = cases.filter((node) => node.result === "FAIL");
   const skippedCases = cases.filter((node) => node.skipped);
@@ -95,4 +96,4 @@ export function reportEnd(node: RootNode) {
     `${cases.length} total ` +
     gray(`(${node.timeTaken} ms)`),
   ].join("\n"));
-}
+} */

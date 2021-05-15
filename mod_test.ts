@@ -62,46 +62,46 @@ describe("test", () => {
 });
 
 describe("hooks", () => {
-  let hooksOrder: string[] = [];
+  const order: string[] = [];
 
   describe("hooks execution order", () => {
     beforeAll(() => {
-      hooksOrder.push("1 - beforeAll");
+      order.push("1 - beforeAll");
     });
     beforeEach(() => {
-      hooksOrder.push("1 - beforeEach");
+      order.push("1 - beforeEach");
     });
     afterEach(() => {
-      hooksOrder.push("1 - afterEach");
+      order.push("1 - afterEach");
     });
     afterAll(() => {
-      hooksOrder.push("1 - afterAll");
+      order.push("1 - afterAll");
     });
     it("a", () => {
-      hooksOrder.push("1 - it");
+      order.push("1 - it");
     });
 
     describe("nested describe", () => {
       beforeAll(() => {
-        hooksOrder.push("2 - beforeAll");
+        order.push("2 - beforeAll");
       });
       beforeEach(() => {
-        hooksOrder.push("2 - beforeEach");
+        order.push("2 - beforeEach");
       });
       afterEach(() => {
-        hooksOrder.push("2 - afterEach");
+        order.push("2 - afterEach");
       });
       afterAll(() => {
-        hooksOrder.push("2 - afterAll");
+        order.push("2 - afterAll");
       });
       it("a", () => {
-        hooksOrder.push("2 - it");
+        order.push("2 - it");
       });
     });
   });
 
   it("executes in the correct order", () => {
-    expect(hooksOrder).toEqual([
+    expect(order).toEqual([
       "1 - beforeAll",
       "1 - beforeEach",
       "1 - it",

@@ -10,17 +10,13 @@
 - Nested suites / cases
 - Hooks (`beforeAll`, `afterAll`, `beforeEach`, `afterEach`)
 - Focusing and skipping (`*.only()`, `*.skip()`)
-- Colorful output
+- Uses `Deno.test`
 - Lightweight
 
 ## Running
 
 ```sh
-deno run <file>
-```
-
-```sh
-deno test -q
+deno test
 ```
 
 ## Usage

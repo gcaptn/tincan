@@ -1,5 +1,5 @@
 import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import { getFullName, reportCase, reportEnd, reportStart } from "./report.ts";
+import { getFullName, reportStart } from "./report.ts";
 
 type NodeRunner = (
   node: RootNode | DescribeNode | ItNode,
@@ -10,7 +10,7 @@ type NodeRunner = (
 function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   reportStart(node);
   node.isRunning = true;
-  let start: number;
+  // let start: number;
 
   node.children.forEach((child, i) => {
     let beforeTasks: TestFunction[] = [];
@@ -18,9 +18,9 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
 
     if (i === 0) {
       beforeTasks = [...node.beforeAll];
-      beforeTasks.unshift(() => {
-        start = Date.now();
-      });
+      // beforeTasks.unshift(() => {
+      //   start = Date.now();
+      // });
     }
 
     afterTasks.push(() => {
@@ -32,8 +32,8 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
     if (i === node.children.length - 1) {
       afterTasks = [...afterTasks, ...node.afterAll];
       afterTasks.push(() => {
-        node.timeTaken = Date.now() - start;
-        reportEnd(node);
+        // node.timeTaken = Date.now() - start;
+        // reportEnd(node);
       });
     }
 
@@ -86,7 +86,7 @@ function runIt(
       node.error = err;
     }
     node.timeTaken = Date.now() - start;
-    reportCase(node);
+    // reportCase(node);
 
     for (const hook of node.afterEach) await hook();
     for (const hook of afterTasks) await hook();
