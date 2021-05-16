@@ -8,9 +8,11 @@
 ## Features
 
 - Nested suites / cases
+- Reports cases with the full hierarchy
 - Hooks (`beforeAll`, `afterAll`, `beforeEach`, `afterEach`)
-- Focusing and skipping (`*.only()`, `*.skip()`)
-- Uses `Deno.test`
+- Focusing (`*.only()`)
+- Skipping (`*.skip()`)
+- Uses `Deno.test`, works with the built-in reporter
 - Lightweight
 
 ## Running
@@ -38,7 +40,7 @@ describe("Array", () => {
   });
 
   describe("#indexOf", () => {
-    it("should return -1 when the item isn't found", () => {
+    it.only("should return -1 when the item isn't found", () => {
       expect(array.indexOf(0)).toBe(-1);
     });
 
