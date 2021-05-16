@@ -3,10 +3,11 @@ import {
   bold,
   gray,
   // green,
-  // red,
+  red,
 } from "https://deno.land/std@0.95.0/fmt/colors.ts";
 
 const log = console.log;
+const logError = console.error;
 
 function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
   const ancestors: DescribeNode[] = [];
@@ -30,6 +31,11 @@ export function getFullName(node: ItNode) {
   const result = node.result === "PASS" ? green(node.result) : red(node.result);
   log(`${result} ${getFullName(node)} (${node.timeTaken} ms)\n`);
 } */
+
+export function reportHookError(hookName: string, error: unknown) {
+  log(`\n${red("ERROR")} in ${hookName} hook:`);
+  logError(error);
+}
 
 function indent(depth: number) {
   return "  ".repeat(depth);

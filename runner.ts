@@ -1,5 +1,5 @@
 import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import { getFullName, reportStart } from "./report.ts";
+import { getFullName, reportHookError, reportStart } from "./report.ts";
 
 type NodeRunner = (
   node: RootNode | DescribeNode | ItNode,
@@ -13,83 +13,103 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   // let start: number;
 
   node.children.forEach((child, i) => {
-    let beforeTasks: TestFunction[] = [];
-    let afterTasks: TestFunction[] = [];
+    let childBeforeHooks: TestFunction[] = [];
+    let childAfterHooks: TestFunction[] = [];
 
     if (i === 0) {
-      beforeTasks = [...node.beforeAll];
-      // beforeTasks.unshift(() => {
+      childBeforeHooks = [...node.beforeAll];
+      // childBeforeHooks.unshift(() => {
       //   start = Date.now();
       // });
     }
 
-    afterTasks.push(() => {
+    childAfterHooks.push(() => {
       if (child.result === "FAIL") {
         node.result = "FAIL";
       }
     });
 
     if (i === node.children.length - 1) {
-      afterTasks = [...afterTasks, ...node.afterAll];
-      // afterTasks.push(() => {
+      childAfterHooks = [...childAfterHooks, ...node.afterAll];
+      // childAfterHooks.push(() => {
       //   node.timeTaken = Date.now() - start;
       //   reportEnd(node);
       // });
     }
 
-    nodeRunner(child, beforeTasks, afterTasks);
+    nodeRunner(child, childBeforeHooks, childAfterHooks);
   });
 }
 
 function runDescribe(
   node: DescribeNode,
-  beforeTasks: TestFunction[],
-  afterTasks: TestFunction[],
+  beforeHooks: TestFunction[],
+  afterHooks: TestFunction[],
   nodeRunner: NodeRunner,
 ) {
   node.children.forEach((child, i) => {
-    let childBeforeTasks: TestFunction[] = [];
-    let childAfterTasks: TestFunction[] = [];
+    let childBeforeHooks: TestFunction[] = [];
+    let childAfterHooks: TestFunction[] = [];
 
     if (i === 0) {
-      childBeforeTasks = [...beforeTasks, ...node.beforeAll];
+      childBeforeHooks = [...beforeHooks, ...node.beforeAll];
     }
 
-    childAfterTasks.push(() => {
+    childAfterHooks.push(() => {
       if (child.result === "FAIL") {
         node.result = "FAIL";
       }
     });
 
     if (i === node.children.length - 1) {
-      childAfterTasks = [...node.afterAll, ...afterTasks];
+      childAfterHooks = [...node.afterAll, ...afterHooks];
     }
 
-    nodeRunner(child, childBeforeTasks, childAfterTasks);
+    nodeRunner(child, childBeforeHooks, childAfterHooks);
   });
+}
+
+async function runHook(hookName: string, hook: TestFunction) {
+  try {
+    await hook();
+  } catch (error) {
+    reportHookError(hookName, error);
+  }
 }
 
 function runIt(
   node: ItNode,
-  beforeTasks: TestFunction[],
-  afterTasks: TestFunction[],
+  beforeHooks: TestFunction[],
+  afterHooks: TestFunction[],
 ) {
   async function wrappedFn() {
-    for (const hook of beforeTasks) await hook();
-    for (const hook of node.beforeEach) await hook();
+    for (const hook of beforeHooks) {
+      await runHook("beforeAll", hook);
+    }
+
+    for (const hook of node.parent.beforeEach) {
+      await runHook("beforeEach", hook);
+    }
 
     const start = Date.now();
+
     try {
       await node.fn();
-    } catch (err) {
+    } catch (error) {
       node.result = "FAIL";
-      node.error = err;
+      node.error = error;
     }
+
     node.timeTaken = Date.now() - start;
     // reportCase(node);
 
-    for (const hook of node.afterEach) await hook();
-    for (const hook of afterTasks) await hook();
+    for (const hook of node.parent.afterEach) {
+      await runHook("afterEach", hook);
+    }
+
+    for (const hook of afterHooks) {
+      await runHook("afterAll", hook);
+    }
 
     if (node.error) {
       throw node.error;

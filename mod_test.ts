@@ -34,87 +34,101 @@ describe("test", () => {
     throw new Error("error");
   });
 
-  it.skip("should not run skipped tests", () => {
-    throw new Error("this should not run");
-  });
-
-  describe.skip("skipped suites", () => {
-    it("should mark its children as skipped", () => {
+  describe("skip", () => {
+    it.skip("should not run skipped tests", () => {
       throw new Error("this should not run");
+    });
+
+    describe.skip("skipped suites", () => {
+      it("should mark its children as skipped", () => {
+        throw new Error("this should not run");
+      });
     });
   });
 
   describe("only", () => {
     it.only("should only run focused nodes", () => {});
+
     it("should mark everything else as skipped", () => {
       throw new Error("this should not run");
     });
+
     describe.only("focused suites", () => {
       it("should run cases inside", () => {});
     });
+
     describe.only("focused nested cases", () => {
       it("should not run other cases", () => {
         throw new Error("this should not run");
       });
+
       it.only("should focused cases", () => {});
     });
   });
-});
 
-describe("hooks", () => {
-  const order: string[] = [];
-
-  describe("hooks execution order", () => {
-    beforeAll(() => {
-      order.push("1 - beforeAll");
-    });
-    beforeEach(() => {
-      order.push("1 - beforeEach");
-    });
-    afterEach(() => {
-      order.push("1 - afterEach");
-    });
-    afterAll(() => {
-      order.push("1 - afterAll");
-    });
-    it("a", () => {
-      order.push("1 - it");
-    });
-
-    describe("nested describe", () => {
+  describe("hooks", () => {
+    describe("hook errors", () => {
       beforeAll(() => {
-        order.push("2 - beforeAll");
+        throw new Error("hook error");
+      });
+
+      it("should catch and report hook errors", () => {});
+    });
+
+    const order: string[] = [];
+
+    describe("hooks execution order", () => {
+      beforeAll(() => {
+        order.push("1 - beforeAll");
       });
       beforeEach(() => {
-        order.push("2 - beforeEach");
+        order.push("1 - beforeEach");
       });
       afterEach(() => {
-        order.push("2 - afterEach");
+        order.push("1 - afterEach");
       });
       afterAll(() => {
-        order.push("2 - afterAll");
+        order.push("1 - afterAll");
       });
-      it("a", () => {
-        order.push("2 - it");
+      it("__", () => {
+        order.push("1 - it");
+      });
+
+      describe("nested describe", () => {
+        beforeAll(() => {
+          order.push("2 - beforeAll");
+        });
+        beforeEach(() => {
+          order.push("2 - beforeEach");
+        });
+        afterEach(() => {
+          order.push("2 - afterEach");
+        });
+        afterAll(() => {
+          order.push("2 - afterAll");
+        });
+        it("__", () => {
+          order.push("2 - it");
+        });
       });
     });
-  });
 
-  it("executes in the correct order", () => {
-    expect(order).toEqual([
-      "1 - beforeAll",
-      "1 - beforeEach",
-      "1 - it",
-      "1 - afterEach",
-      "2 - beforeAll",
-      "1 - beforeEach",
-      "2 - beforeEach",
-      "2 - it",
-      "2 - afterEach",
-      "1 - afterEach",
-      "2 - afterAll",
-      "1 - afterAll",
-    ]);
+    it("should execute in the correct order", () => {
+      expect(order).toEqual([
+        "1 - beforeAll",
+        "1 - beforeEach",
+        "1 - it",
+        "1 - afterEach",
+        "2 - beforeAll",
+        "1 - beforeEach",
+        "2 - beforeEach",
+        "2 - it",
+        "2 - afterEach",
+        "1 - afterEach",
+        "2 - afterAll",
+        "1 - afterAll",
+      ]);
+    });
   });
 });
 

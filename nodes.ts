@@ -84,8 +84,6 @@ export class ItNode implements ChildNode {
   parent: DescribeNode | RootNode;
   headline: string;
   fn: TestFunction;
-  beforeEach: TestFunction[] = [];
-  afterEach: TestFunction[] = [];
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
@@ -100,8 +98,6 @@ export class ItNode implements ChildNode {
     this.parent = parent;
     this.headline = headline;
     this.fn = fn;
-    this.beforeEach = [...parent.beforeEach];
-    this.afterEach = [...parent.afterEach];
   }
 
   skip() {
