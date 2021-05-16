@@ -144,7 +144,7 @@ export class Environment {
     }
   }
 
-  private addDescribeNode(headline: string, fn: () => void) {
+  addDescribeNode(headline: string, fn: () => void) {
     this.assertDescribeOrRootOnly("describe()");
     const parent = this.currentNode;
     const node = new DescribeNode(headline, parent);
@@ -172,7 +172,7 @@ export class Environment {
     node.focus();
   }
 
-  private addItNode(headline: string, fn: TestFunction) {
+  addItNode(headline: string, fn: TestFunction) {
     this.assertDescribeOrRootOnly("it()");
     const parent = this.currentNode;
     const node = new ItNode(headline, fn, parent);
