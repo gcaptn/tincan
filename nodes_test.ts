@@ -9,7 +9,10 @@ addDescribeNode or addItNode
 DescribeNode
   inherits the parent's Each hooks
 
-describe() or it() skips itself if it has a focused sibling
+describe() or it()
+  skips itself if it has a focused sibling
+  throws when the headline is empty
+
 calling a hook creator adds a hook to the current parent
 calling a hook or creating a node inside it() throws
 
@@ -69,6 +72,34 @@ Deno.test("DescribeNode inherits the parent's Each hooks", () => {
   const describeNode = new DescribeNode("_", parentNode);
   expect(describeNode.beforeEach).toContain(beforeHook);
   expect(describeNode.afterEach).toContain(afterHook);
+});
+
+Deno.test("describe() or it() throws when the headline is empty", () => {
+  const env = new Environment();
+
+  expect(() => {
+    env.describe("", noop);
+  }).toThrow();
+
+  expect(() => {
+    env.describe("   ", noop);
+  }).toThrow();
+
+  expect(() => {
+    env.it("", noop);
+  }).toThrow();
+
+  expect(() => {
+    env.it("   ", noop);
+  }).toThrow();
+
+  expect(() => {
+    env.describe(" _ ", noop);
+  }).not.toThrow();
+
+  expect(() => {
+    env.it(" _ ", noop);
+  }).not.toThrow();
 });
 
 Deno.test("describe() or it() skips itself if it has a focused sibling", () => {

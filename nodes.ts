@@ -9,15 +9,6 @@ type HookType =
   | "afterEach"
   | "afterAll";
 
-export class Hook {
-  type: HookType;
-  fn: TestFunction;
-  constructor(type: HookType, fn: TestFunction) {
-    this.type = type;
-    this.fn = fn;
-  }
-}
-
 type ParentNode = {
   children: (DescribeNode | ItNode)[];
   hasFocused: boolean;
@@ -31,6 +22,21 @@ type ChildNode = {
   skip: () => void;
   focus: () => void;
 };
+
+function assertNotEmpty(headline: string) {
+  if (!headline.match(/\S/g)) {
+    throw new Error("Headline cannot be empty!");
+  }
+}
+
+export class Hook {
+  type: HookType;
+  fn: TestFunction;
+  constructor(type: HookType, fn: TestFunction) {
+    this.type = type;
+    this.fn = fn;
+  }
+}
 
 export class RootNode implements ParentNode {
   children: (DescribeNode | ItNode)[] = [];
@@ -68,6 +74,7 @@ export class DescribeNode implements ParentNode, ChildNode {
   hasFocused = false;
 
   constructor(headline: string, parent: RootNode | DescribeNode) {
+    assertNotEmpty(headline);
     this.headline = headline;
     this.parent = parent;
     this.beforeEach = [...parent.beforeEach];
@@ -111,6 +118,7 @@ export class ItNode implements ChildNode {
     fn: TestFunction,
     parent: DescribeNode | RootNode,
   ) {
+    assertNotEmpty(headline);
     this.parent = parent;
     this.headline = headline;
     this.fn = fn;
