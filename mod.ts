@@ -27,10 +27,18 @@ it.skip = function (headline: string, fn: TestFunction) {
   env.itSkip(headline, fn);
 };
 
-export const beforeAll = (fn: TestFunction) => env.beforeAll(fn);
-export const beforeEach = (fn: TestFunction) => env.beforeEach(fn);
-export const afterEach = (fn: TestFunction) => env.afterEach(fn);
-export const afterAll = (fn: TestFunction) => env.afterAll(fn);
+export function beforeAll(fn: TestFunction) {
+  env.beforeAll(fn);
+}
+export function beforeEach(fn: TestFunction) {
+  env.beforeEach(fn);
+}
+export function afterEach(fn: TestFunction) {
+  env.afterEach(fn);
+}
+export function afterAll(fn: TestFunction) {
+  env.afterAll(fn);
+}
 
 export function run() {
   runNode(env.root);

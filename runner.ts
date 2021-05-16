@@ -1,10 +1,10 @@
-import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes.ts";
+import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
 import { getFullName, reportHookError, reportStart } from "./report.ts";
 
 type NodeRunner = (
   node: RootNode | DescribeNode | ItNode,
-  beforeHooks: TestFunction[],
-  afterHooks: TestFunction[],
+  beforeHooks: Hook[],
+  afterHooks: Hook[],
 ) => void;
 
 function runRoot(node: RootNode, nodeRunner: NodeRunner) {
@@ -13,28 +13,30 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   // let start: number;
 
   node.children.forEach((child, i) => {
-    let childBeforeHooks: TestFunction[] = [];
-    let childAfterHooks: TestFunction[] = [];
+    let childBeforeHooks: Hook[] = [];
+    let childAfterHooks: Hook[] = [];
 
     if (i === 0) {
       childBeforeHooks = [...node.beforeAll];
-      // childBeforeHooks.unshift(() => {
+      // childBeforeHooks.unshift(new Hook("internal", () => {
       //   start = Date.now();
-      // });
+      // }));
     }
 
-    childAfterHooks.push(() => {
-      if (child.result === "FAIL") {
-        node.result = "FAIL";
-      }
-    });
+    childAfterHooks.push(
+      new Hook("internal", () => {
+        if (child.result === "FAIL") {
+          node.result = "FAIL";
+        }
+      }),
+    );
 
     if (i === node.children.length - 1) {
       childAfterHooks = [...childAfterHooks, ...node.afterAll];
-      // childAfterHooks.push(() => {
+      // childAfterHooks.push(new Hook("internal", () => {
       //   node.timeTaken = Date.now() - start;
       //   reportEnd(node);
-      // });
+      // }));
     }
 
     nodeRunner(child, childBeforeHooks, childAfterHooks);
@@ -43,23 +45,25 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
 
 function runDescribe(
   node: DescribeNode,
-  beforeHooks: TestFunction[],
-  afterHooks: TestFunction[],
+  beforeHooks: Hook[],
+  afterHooks: Hook[],
   nodeRunner: NodeRunner,
 ) {
   node.children.forEach((child, i) => {
-    let childBeforeHooks: TestFunction[] = [];
-    let childAfterHooks: TestFunction[] = [];
+    let childBeforeHooks: Hook[] = [];
+    let childAfterHooks: Hook[] = [];
 
     if (i === 0) {
       childBeforeHooks = [...beforeHooks, ...node.beforeAll];
     }
 
-    childAfterHooks.push(() => {
-      if (child.result === "FAIL") {
-        node.result = "FAIL";
-      }
-    });
+    childAfterHooks.push(
+      new Hook("internal", () => {
+        if (child.result === "FAIL") {
+          node.result = "FAIL";
+        }
+      }),
+    );
 
     if (i === node.children.length - 1) {
       childAfterHooks = [...node.afterAll, ...afterHooks];
@@ -69,26 +73,26 @@ function runDescribe(
   });
 }
 
-async function runHook(hookName: string, hook: TestFunction) {
+async function runHook(hook: Hook) {
   try {
-    await hook();
+    await hook.fn();
   } catch (error) {
-    reportHookError(hookName, error);
+    reportHookError(hook, error);
   }
 }
 
 function runIt(
   node: ItNode,
-  beforeHooks: TestFunction[],
-  afterHooks: TestFunction[],
+  beforeHooks: Hook[],
+  afterHooks: Hook[],
 ) {
   async function wrappedFn() {
     for (const hook of beforeHooks) {
-      await runHook("beforeAll", hook);
+      await runHook(hook);
     }
 
     for (const hook of node.parent.beforeEach) {
-      await runHook("beforeEach", hook);
+      await runHook(hook);
     }
 
     const start = Date.now();
@@ -104,11 +108,11 @@ function runIt(
     // reportCase(node);
 
     for (const hook of node.parent.afterEach) {
-      await runHook("afterEach", hook);
+      await runHook(hook);
     }
 
     for (const hook of afterHooks) {
-      await runHook("afterAll", hook);
+      await runHook(hook);
     }
 
     if (node.error) {
@@ -125,8 +129,8 @@ function runIt(
 
 export function runNode(
   node: RootNode | DescribeNode | ItNode,
-  beforeHooks: TestFunction[] = [],
-  afterHooks: TestFunction[] = [],
+  beforeHooks: Hook[] = [],
+  afterHooks: Hook[] = [],
 ) {
   if (node instanceof RootNode) {
     runRoot(node, runNode);

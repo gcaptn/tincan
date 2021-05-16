@@ -2,6 +2,22 @@ export type TestResult = "FAIL" | "PASS";
 
 export type TestFunction = () => void | Promise<void>;
 
+type HookType =
+  | "internal"
+  | "beforeAll"
+  | "beforeEach"
+  | "afterEach"
+  | "afterAll";
+
+export class Hook {
+  type: HookType;
+  fn: TestFunction;
+  constructor(type: HookType, fn: TestFunction) {
+    this.type = type;
+    this.fn = fn;
+  }
+}
+
 type ParentNode = {
   children: (DescribeNode | ItNode)[];
   hasFocused: boolean;
@@ -18,10 +34,10 @@ type ChildNode = {
 
 export class RootNode implements ParentNode {
   children: (DescribeNode | ItNode)[] = [];
-  beforeAll: TestFunction[] = [];
-  afterAll: TestFunction[] = [];
-  beforeEach: TestFunction[] = [];
-  afterEach: TestFunction[] = [];
+  beforeAll: Hook[] = [];
+  afterAll: Hook[] = [];
+  beforeEach: Hook[] = [];
+  afterEach: Hook[] = [];
   result: TestResult = "PASS";
   isRunning = false;
   timeTaken = 0;
@@ -43,10 +59,10 @@ export class DescribeNode implements ParentNode, ChildNode {
   parent: RootNode | DescribeNode;
   headline: string;
   result: TestResult = "PASS";
-  beforeAll: TestFunction[] = [];
-  afterAll: TestFunction[] = [];
-  beforeEach: TestFunction[] = [];
-  afterEach: TestFunction[] = [];
+  beforeAll: Hook[] = [];
+  afterAll: Hook[] = [];
+  beforeEach: Hook[] = [];
+  afterEach: Hook[] = [];
   skipped = false;
   focused = false;
   hasFocused = false;
@@ -183,21 +199,21 @@ export class Environment {
 
   beforeAll(fn: TestFunction) {
     this.assertDescribeOrRootOnly("beforeAll()");
-    this.currentNode.beforeAll.push(fn);
+    this.currentNode.beforeAll.push(new Hook("beforeAll", fn));
   }
 
   beforeEach(fn: TestFunction) {
     this.assertDescribeOrRootOnly("beforeEach()");
-    this.currentNode.beforeEach.push(fn);
-  }
-
-  afterAll(fn: TestFunction) {
-    this.assertDescribeOrRootOnly("afterAll()");
-    this.currentNode.afterAll.unshift(fn);
+    this.currentNode.beforeEach.push(new Hook("beforeEach", fn));
   }
 
   afterEach(fn: TestFunction) {
     this.assertDescribeOrRootOnly("afterEach()");
-    this.currentNode.afterEach.unshift(fn);
+    this.currentNode.afterEach.unshift(new Hook("afterEach", fn));
+  }
+
+  afterAll(fn: TestFunction) {
+    this.assertDescribeOrRootOnly("afterAll()");
+    this.currentNode.afterAll.unshift(new Hook("afterAll", fn));
   }
 }

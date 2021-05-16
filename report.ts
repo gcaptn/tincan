@@ -1,4 +1,4 @@
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
 import {
   bold,
   gray,
@@ -32,8 +32,13 @@ export function getFullName(node: ItNode) {
   log(`${result} ${getFullName(node)} (${node.timeTaken} ms)\n`);
 } */
 
-export function reportHookError(hookName: string, error: unknown) {
-  log(`\n${red("ERROR")} in ${hookName} hook:`);
+export function reportHookError(hook: Hook, error: unknown) {
+  log(`\n${red("ERROR")} in ${hook.type} hook:`);
+  if (hook.type === "internal") {
+    log(
+      "This is probably a bug. Please file an issue if you see this message.",
+    );
+  }
   logError(error);
 }
 
@@ -48,7 +53,9 @@ function formatNode(
   let str = "";
   if (node instanceof ItNode) {
     str += gray(
-      `${indent(depth)}•${node.skipped ? " [SKIP]" : ""} ${node.headline}\n`,
+      `${indent(depth - 1)}•${
+        node.skipped ? " [SKIP]" : ""
+      } ${node.headline}\n`,
     );
   } else if (node instanceof DescribeNode) {
     str += `${indent(depth)}${node.skipped ? "[SKIP] " : ""}${node.headline}\n`;
