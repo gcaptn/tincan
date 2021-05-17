@@ -30,7 +30,13 @@ export function runRoot(node: RootNode, nodeRunner: NodeRunner) {
       );
     }
 
-    nodeRunner(child, childBeforeHooks, [], [], childAfterHooks);
+    nodeRunner(
+      child,
+      childBeforeHooks,
+      [...node.beforeEach],
+      [...node.afterEach],
+      childAfterHooks,
+    );
   });
 }
 
@@ -90,10 +96,13 @@ export function runIt(
 
     node.start();
 
+    let didThrow = false;
+
     try {
       await node.fn();
     } catch (error) {
       node.fail(error);
+      didThrow = true;
     }
 
     node.finish();
@@ -107,7 +116,7 @@ export function runIt(
       await runHook(hook);
     }
 
-    if (node.error) {
+    if (didThrow) {
       throw node.error;
     }
   }

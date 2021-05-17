@@ -4,10 +4,12 @@ import {
   beforeAll,
   beforeEach,
   describe,
-  expect,
   it,
   run,
 } from "./mod.ts";
+import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
+
+const noop = () => {};
 
 describe("test", () => {
   it("should wait for promises", () => {
@@ -16,17 +18,17 @@ describe("test", () => {
 
   it("should refuse to add hooks within a case", () => {
     expect(() => {
-      beforeAll(() => {});
+      beforeAll(noop);
     }).toThrow();
   });
 
   it("should refuse to add nodes within a case", () => {
     expect(() => {
-      describe("_", () => {});
+      describe("_", noop);
     }).toThrow();
 
     expect(() => {
-      it("_", () => {});
+      it("_", noop);
     }).toThrow();
   });
 
@@ -47,14 +49,20 @@ describe("test", () => {
   });
 
   describe("only", () => {
-    it.only("should only run focused nodes", () => {});
+    it.only("should only run focused nodes", noop);
 
     it("should mark everything else as skipped", () => {
       throw new Error("this should not run");
     });
 
     describe.only("focused suites", () => {
-      it("should run cases inside", () => {});
+      const caseFn = mock.fn();
+
+      it("_", caseFn);
+
+      it("should run cases inside", () => {
+        expect(caseFn).toHaveBeenCalled();
+      });
     });
 
     describe.only("focused nested cases", () => {
@@ -62,7 +70,13 @@ describe("test", () => {
         throw new Error("this should not run");
       });
 
-      it.only("should focused cases", () => {});
+      const caseFn = mock.fn();
+
+      it.only("_", caseFn);
+
+      it.only("should run focused cases", () => {
+        expect(caseFn).toHaveBeenCalled();
+      });
     });
   });
 
@@ -71,8 +85,7 @@ describe("test", () => {
       beforeAll(() => {
         throw new Error("hook error");
       });
-
-      it("should catch and report hook errors", () => {});
+      it("should catch and report hook errors", noop);
     });
 
     const order: string[] = [];
