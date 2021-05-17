@@ -113,6 +113,7 @@ export class DescribeNode implements ParentNode, ChildNode {
 
   fail() {
     this.result = "FAIL";
+    this.parent.fail();
   }
 }
 
@@ -152,9 +153,10 @@ export class ItNode implements ChildNode {
     this.startTime = Date.now();
   }
 
-  fail(error: unknown) {
+  fail(error?: unknown) {
     this.result = "FAIL";
     this.error = error;
+    this.parent.fail();
   }
 
   finish() {

@@ -25,6 +25,7 @@ node.focus()
 node.fail()
   sets the status to fail
   on an ItNode sets the error to the given value
+  calls fail on the parent
 
 node.start()
   sets the start time
@@ -34,27 +35,23 @@ node.finish()
 
 */
 
-import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
+import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 import { DescribeNode, Environment, ItNode, RootNode } from "./nodes.ts";
 
 const noop = () => {};
 
 Deno.test("describe()'s function is called on construction", () => {
   const env = new Environment();
-  let called = false;
-  env.describe("_", () => {
-    called = true;
-  });
-  expect(called).toBe(true);
+  const fn = mock.fn();
+  env.describe("_", fn);
+  expect(fn).toHaveBeenCalled();
 });
 
 Deno.test("it()'s function is not called on construction", () => {
   const env = new Environment();
-  let called = false;
-  env.it("_", () => {
-    called = true;
-  });
-  expect(called).toBe(false);
+  const fn = mock.fn();
+  env.it("_", fn);
+  expect(fn).not.toHaveBeenCalled();
 });
 
 Deno.test("addDescribeNode or addItNode adds to the current parent's children", () => {
@@ -186,6 +183,16 @@ Deno.test("node.fail() on an ItNode sets the error to the given value", () => {
   const value = new Error();
   itNode.fail(value);
   expect(itNode.error).toBe(value);
+});
+
+Deno.test("node.fail() calls .fail() on the parent", () => {
+  const parent = new RootNode();
+  const itNode = new ItNode("_", noop, parent);
+  const describeNode = new ItNode("_", noop, parent);
+  parent.fail = mock.fn();
+  itNode.fail();
+  describeNode.fail();
+  expect(parent.fail).toHaveBeenCalledTimes(2);
 });
 
 Deno.test("node.start() sets the start time", () => {
