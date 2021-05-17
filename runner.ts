@@ -4,13 +4,13 @@ import { getFullName, reportHookError, reportStart } from "./report.ts";
 type NodeRunner = (
   node: RootNode | DescribeNode | ItNode,
   beforeHooks: Hook[],
+  beforeEachHooks: Hook[],
+  afterEachHooks: Hook[],
   afterHooks: Hook[],
 ) => void;
 
 function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   reportStart(node);
-  node.isRunning = true;
-  // let start: number;
 
   node.children.forEach((child, i) => {
     let childBeforeHooks: Hook[] = [];
@@ -18,34 +18,39 @@ function runRoot(node: RootNode, nodeRunner: NodeRunner) {
 
     if (i === 0) {
       childBeforeHooks = [...node.beforeAll];
-      // childBeforeHooks.unshift(new Hook("internal", () => {
-      //   start = Date.now();
-      // }));
+      childBeforeHooks.unshift(
+        new Hook("internal", () => {
+          node.start();
+        }),
+      );
     }
 
     childAfterHooks.push(
       new Hook("internal", () => {
         if (child.result === "FAIL") {
-          node.result = "FAIL";
+          node.fail();
         }
       }),
     );
 
     if (i === node.children.length - 1) {
       childAfterHooks = [...childAfterHooks, ...node.afterAll];
-      // childAfterHooks.push(new Hook("internal", () => {
-      //   node.timeTaken = Date.now() - start;
-      //   reportEnd(node);
-      // }));
+      childAfterHooks.push(
+        new Hook("internal", () => {
+          node.finish();
+        }),
+      );
     }
 
-    nodeRunner(child, childBeforeHooks, childAfterHooks);
+    nodeRunner(child, childBeforeHooks, [], [], childAfterHooks);
   });
 }
 
 function runDescribe(
   node: DescribeNode,
   beforeHooks: Hook[],
+  beforeEachHooks: Hook[],
+  afterEachHooks: Hook[],
   afterHooks: Hook[],
   nodeRunner: NodeRunner,
 ) {
@@ -60,7 +65,7 @@ function runDescribe(
     childAfterHooks.push(
       new Hook("internal", () => {
         if (child.result === "FAIL") {
-          node.result = "FAIL";
+          node.fail();
         }
       }),
     );
@@ -69,7 +74,13 @@ function runDescribe(
       childAfterHooks = [...node.afterAll, ...afterHooks];
     }
 
-    nodeRunner(child, childBeforeHooks, childAfterHooks);
+    nodeRunner(
+      child,
+      childBeforeHooks,
+      [...beforeEachHooks, ...node.beforeEach],
+      [...node.afterEach, ...afterEachHooks],
+      childAfterHooks,
+    );
   });
 }
 
@@ -84,6 +95,8 @@ async function runHook(hook: Hook) {
 function runIt(
   node: ItNode,
   beforeHooks: Hook[],
+  beforeEachHooks: Hook[],
+  afterEachHooks: Hook[],
   afterHooks: Hook[],
 ) {
   async function wrappedFn() {
@@ -91,23 +104,22 @@ function runIt(
       await runHook(hook);
     }
 
-    for (const hook of node.parent.beforeEach) {
+    for (const hook of beforeEachHooks) {
       await runHook(hook);
     }
 
-    const start = Date.now();
+    node.start();
 
     try {
       await node.fn();
     } catch (error) {
-      node.result = "FAIL";
-      node.error = error;
+      node.fail(error);
     }
 
-    node.timeTaken = Date.now() - start;
+    node.finish();
     // reportCase(node);
 
-    for (const hook of node.parent.afterEach) {
+    for (const hook of afterEachHooks) {
       await runHook(hook);
     }
 
@@ -130,13 +142,22 @@ function runIt(
 export function runNode(
   node: RootNode | DescribeNode | ItNode,
   beforeHooks: Hook[] = [],
+  beforeEachHooks: Hook[] = [],
+  afterEachHooks: Hook[] = [],
   afterHooks: Hook[] = [],
 ) {
   if (node instanceof RootNode) {
     runRoot(node, runNode);
   } else if (node instanceof DescribeNode) {
-    runDescribe(node, beforeHooks, afterHooks, runNode);
+    runDescribe(
+      node,
+      beforeHooks,
+      beforeEachHooks,
+      afterEachHooks,
+      afterHooks,
+      runNode,
+    );
   } else {
-    runIt(node, beforeHooks, afterHooks);
+    runIt(node, beforeHooks, beforeEachHooks, afterEachHooks, afterHooks);
   }
 }

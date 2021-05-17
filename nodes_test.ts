@@ -6,9 +6,6 @@ describe()
 addDescribeNode or addItNode
   adds to the current parent
 
-DescribeNode
-  inherits the parent's Each hooks
-
 describe() or it()
   skips itself if it has a focused sibling
   throws when the headline is empty
@@ -25,10 +22,20 @@ node.skip()
 node.focus()
   skips non-focused siblings
 
+node.fail()
+  sets the status to fail
+  on an ItNode sets the error to the given value
+
+node.start()
+  sets the start time
+
+node.finish()
+  sets the time taken
+
 */
 
 import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { DescribeNode, Environment, Hook, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, Environment, ItNode, RootNode } from "./nodes.ts";
 
 const noop = () => {};
 
@@ -61,17 +68,6 @@ Deno.test("addDescribeNode or addItNode adds to the current parent's children", 
 
   expect(parentNode.children).toContain(describeNode);
   expect(parentNode.children).toContain(itNode);
-});
-
-Deno.test("DescribeNode inherits the parent's Each hooks", () => {
-  const beforeHook = new Hook("beforeEach", noop);
-  const afterHook = new Hook("afterEach", noop);
-  const parentNode = new RootNode();
-  parentNode.beforeEach.push(beforeHook);
-  parentNode.afterEach.push(afterHook);
-  const describeNode = new DescribeNode("_", parentNode);
-  expect(describeNode.beforeEach).toContain(beforeHook);
-  expect(describeNode.afterEach).toContain(afterHook);
 });
 
 Deno.test("describe() or it() throws when the headline is empty", () => {
@@ -174,4 +170,38 @@ Deno.test("node.focus() skips non-focused siblings", () => {
   const sibling = env.addItNode("_", noop);
   node.focus();
   expect(sibling.skipped).toBe(true);
+});
+
+Deno.test("node.fail() sets the status to FAIL", () => {
+  const rootNode = new RootNode();
+  const describeNode = new DescribeNode("_", rootNode);
+  rootNode.fail();
+  describeNode.fail();
+  expect(rootNode.result).toBe("FAIL");
+  expect(describeNode.result).toBe("FAIL");
+});
+
+Deno.test("node.fail() on an ItNode sets the error to the given value", () => {
+  const itNode = new ItNode("_", noop, new RootNode());
+  const value = new Error();
+  itNode.fail(value);
+  expect(itNode.error).toBe(value);
+});
+
+Deno.test("node.start() sets the start time", () => {
+  const rootNode = new RootNode();
+  const itNode = new ItNode("_", noop, rootNode);
+  rootNode.start();
+  itNode.start();
+  expect(rootNode.startTime).not.toBe(0);
+  expect(rootNode.startTime).not.toBe(0);
+});
+
+Deno.test("node.finish() sets the time taken", () => {
+  const rootNode = new RootNode();
+  const itNode = new ItNode("_", noop, rootNode);
+  rootNode.finish();
+  itNode.finish();
+  expect(rootNode.timeTaken).not.toBe(0);
+  expect(rootNode.timeTaken).not.toBe(0);
 });

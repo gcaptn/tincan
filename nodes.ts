@@ -47,16 +47,29 @@ export class RootNode implements ParentNode {
   result: TestResult = "PASS";
   isRunning = false;
   timeTaken = 0;
+  startTime = 0;
   hasFocused = false;
 
   updateFocusedChildren() {
-    if (this.hasFocused) {
-      this.children.forEach((child) => {
-        if (child.focused === false) {
-          child.skip();
-        }
-      });
-    }
+    this.hasFocused = true;
+    this.children.forEach((child) => {
+      if (child.focused === false) {
+        child.skip();
+      }
+    });
+  }
+
+  start() {
+    this.startTime = Date.now();
+    this.isRunning = true;
+  }
+
+  fail() {
+    this.result = "FAIL";
+  }
+
+  finish() {
+    this.timeTaken = Date.now() - this.startTime;
   }
 }
 
@@ -77,8 +90,6 @@ export class DescribeNode implements ParentNode, ChildNode {
     assertNotEmpty(headline);
     this.headline = headline;
     this.parent = parent;
-    this.beforeEach = [...parent.beforeEach];
-    this.afterEach = [...parent.afterEach];
   }
 
   skip() {
@@ -88,18 +99,20 @@ export class DescribeNode implements ParentNode, ChildNode {
 
   focus() {
     this.focused = true;
-    this.parent.hasFocused = true;
     this.parent.updateFocusedChildren();
   }
 
   updateFocusedChildren() {
-    if (this.hasFocused) {
-      this.children.forEach((child) => {
-        if (child.focused === false) {
-          child.skip();
-        }
-      });
-    }
+    this.hasFocused = true;
+    this.children.forEach((child) => {
+      if (child.focused === false) {
+        child.skip();
+      }
+    });
+  }
+
+  fail() {
+    this.result = "FAIL";
   }
 }
 
@@ -110,6 +123,7 @@ export class ItNode implements ChildNode {
   result: TestResult = "PASS";
   error: unknown;
   timeTaken = 0;
+  startTime = 0;
   skipped = false;
   focused = false;
 
@@ -132,6 +146,19 @@ export class ItNode implements ChildNode {
     this.focused = true;
     this.parent.hasFocused = true;
     this.parent.updateFocusedChildren();
+  }
+
+  start() {
+    this.startTime = Date.now();
+  }
+
+  fail(error: unknown) {
+    this.result = "FAIL";
+    this.error = error;
+  }
+
+  finish() {
+    this.timeTaken = Date.now() - this.startTime;
   }
 }
 
