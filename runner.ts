@@ -9,19 +9,52 @@ type NodeRunner = (
   afterHooks: Hook[],
 ) => void;
 
+type FindChildResult = ItNode | DescribeNode | undefined;
+
+function findChildWithCase(
+  children: (ItNode | DescribeNode)[],
+  recursiveSearch: (node: (DescribeNode | RootNode)) => FindChildResult,
+): FindChildResult {
+  for (const child of children) {
+    if (
+      child.skipped === false &&
+      (child instanceof ItNode || recursiveSearch(child as DescribeNode))
+    ) {
+      return child;
+    }
+  }
+}
+
+// Find the child that will run the beforeAll/afterAll hooks
+
+function findChildWithFirstCase(
+  node: DescribeNode | RootNode,
+): FindChildResult {
+  return findChildWithCase(node.children, findChildWithFirstCase);
+}
+
+function findChildWithLastCase(
+  node: DescribeNode | RootNode,
+): FindChildResult {
+  return findChildWithCase([...node.children].reverse(), findChildWithLastCase);
+}
+
 export function runRoot(node: RootNode, nodeRunner: NodeRunner) {
   node.start();
   reportStart(node);
 
-  node.children.forEach((child, i) => {
+  const childWithFirstCase = findChildWithFirstCase(node);
+  const childWithLastCase = findChildWithLastCase(node);
+
+  node.children.forEach((child) => {
     let childBeforeHooks: Hook[] = [];
     let childAfterHooks: Hook[] = [];
 
-    if (i === 0) {
+    if (child === childWithFirstCase) {
       childBeforeHooks = [...node.beforeAll];
     }
 
-    if (i === node.children.length - 1) {
+    if (child === childWithLastCase) {
       childAfterHooks = [...childAfterHooks, ...node.afterAll];
       childAfterHooks.push(
         new Hook("internal", () => {
@@ -48,15 +81,18 @@ export function runDescribe(
   afterHooks: Hook[],
   nodeRunner: NodeRunner,
 ) {
-  node.children.forEach((child, i) => {
+  const childWithFirstCase = findChildWithFirstCase(node);
+  const childWithLastCase = findChildWithLastCase(node);
+
+  node.children.forEach((child) => {
     let childBeforeHooks: Hook[] = [];
     let childAfterHooks: Hook[] = [];
 
-    if (i === 0) {
+    if (child === childWithFirstCase) {
       childBeforeHooks = [...beforeHooks, ...node.beforeAll];
     }
 
-    if (i === node.children.length - 1) {
+    if (child === childWithLastCase) {
       childAfterHooks = [...node.afterAll, ...afterHooks];
     }
 

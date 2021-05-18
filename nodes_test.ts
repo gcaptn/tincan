@@ -229,9 +229,20 @@ Deno.test("node.fail() calls .fail() on the parent", () => {
   expect(parent.fail).toHaveBeenCalledTimes(2);
 });
 
+Deno.test("node.start() on the root throws if there are no cases", () => {
+  const rootNode = new RootNode();
+  expect(rootNode.start).toThrow();
+
+  rootNode.children.push(new ItNode("_", noop, rootNode));
+  expect(() => {
+    rootNode.start();
+  }).not.toThrow();
+});
+
 Deno.test("node.start() sets the start time", () => {
   const rootNode = new RootNode();
   const itNode = new ItNode("_", noop, rootNode);
+  rootNode.children.push(itNode);
   rootNode.start();
   itNode.start();
   expect(rootNode.startTime).not.toBe(0);

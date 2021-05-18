@@ -29,8 +29,8 @@ function assertNotEmpty(headline: string) {
   }
 }
 
-function hasCase(searchNode: DescribeNode): boolean {
-  for (const child of searchNode.children) {
+function hasCase(node: DescribeNode | RootNode): boolean {
+  for (const child of node.children) {
     if (child instanceof ItNode) {
       return true;
     } else {
@@ -40,11 +40,9 @@ function hasCase(searchNode: DescribeNode): boolean {
   return false;
 }
 
-// Test cases are the ones to call hooks. For everything to run as
-// intended, every child node should be/have at least one ItNode
-function assertHasCase(node: DescribeNode) {
+function assertHasCase(node: DescribeNode | RootNode, method: string) {
   if (!hasCase(node)) {
-    throw new Error("describe() should have at least one test case!");
+    throw new Error(`${method} should have at least one test case!`);
   }
 }
 
@@ -79,6 +77,7 @@ export class RootNode implements ParentNode {
   }
 
   start() {
+    assertHasCase(this, "Tests");
     this.startTime = Date.now();
     this.isRunning = true;
   }
@@ -207,7 +206,7 @@ export class Environment {
     parent.children.push(node);
     this.currentNode = node;
     fn();
-    assertHasCase(node);
+    assertHasCase(node, "describe()");
     this.currentNode = parent;
     return node;
   }
