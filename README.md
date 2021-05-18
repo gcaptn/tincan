@@ -1,9 +1,16 @@
 <p align="center">
-  <img src="./preview.png" widdth="80%" align="center"/>
+  <img src="./preview.png" width="80%" align="center"/>
   <h1 align="center">tincan</h1>
 </p>
 
 <p align="center">A lightweight Jest-like testing library for Deno</p>
+
+<p align="center">
+    <a href="https://github.com/gcaptn/tincan/actions/"><img alt="ci" src="https://img.shields.io/github/workflow/status/gcaptn/tincan/ci?label=ci" /></a>
+    <img src="https://shields.io/github/v/tag/gcaptn/tincan" />
+    <a href="https://www.codefactor.io/repository/github/gcaptn/tincan/"><img alt="CodeFactor" src="https://www.codefactor.io/repository/github/gcaptn/tincan/badge" /></a>
+    <a href="https://deno.land/x/tincan"><img alt="deno.land/x" src="http://img.shields.io/badge/available%20on-deno.land/x-lightgrey.svg?logo=deno&labelColor=black" /></a>
+</p>
 
 ## Features
 
@@ -53,3 +60,4 @@ describe("Array", () => {
 
 run();
 ```
+
