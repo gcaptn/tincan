@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./preview.png" align="center"/>
+  <img src="./preview.png" widdth="80%" align="center"/>
   <h1 align="center">tincan</h1>
 </p>
 

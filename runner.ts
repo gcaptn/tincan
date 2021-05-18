@@ -85,6 +85,9 @@ export function runIt(
   afterEachHooks: Hook[],
   afterHooks: Hook[],
 ) {
+  // Deno.test() *registers* tests and runs them separately. Hooks
+  // have to be passsed down and ran in one function with the test
+
   async function wrappedFn() {
     for (const hook of beforeHooks) {
       await runHook(hook);

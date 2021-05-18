@@ -1,7 +1,11 @@
 /*
 
-describe()
+addDescribeNode
   's function is called on construction
+  throws when there are no cases
+
+addItNode
+  's function is not called on construction
 
 addDescribeNode or addItNode
   adds to the current parent
@@ -12,9 +16,6 @@ describe() or it()
 
 calling a hook creator adds a hook to the current parent
 calling a hook or creating a node inside it() throws
-
-it()
-  's function is not called on construction
 
 node.skip()
   skips all of its children
@@ -38,19 +39,50 @@ node.finish()
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 import { DescribeNode, Environment, ItNode, RootNode } from "./nodes.ts";
 
-const noop = () => {};
+function noop() {}
 
-Deno.test("describe()'s function is called on construction", () => {
+// describe nodes should have at least one case
+function noopDescribe(env: Environment) {
+  return () => {
+    env.it("_", noop);
+  };
+}
+
+Deno.test("addDescribeNode's function is called on construction", () => {
   const env = new Environment();
-  const fn = mock.fn();
-  env.describe("_", fn);
+  const fn = mock.fn(noopDescribe(env));
+  env.addDescribeNode("_", fn);
   expect(fn).toHaveBeenCalled();
 });
 
-Deno.test("it()'s function is not called on construction", () => {
+Deno.test("addDescribeNode throws when there are no cases", () => {
+  const env = new Environment();
+
+  expect(() => {
+    env.addDescribeNode("_", noop);
+  }).toThrow();
+
+  expect(() => {
+    env.addDescribeNode("_", () => {
+      env.addDescribeNode("_", noop);
+    });
+  }).toThrow();
+
+  expect(() => {
+    env.addDescribeNode("_", noopDescribe(env));
+  }).not.toThrow();
+
+  expect(() => {
+    env.addDescribeNode("_", () => {
+      env.addDescribeNode("_", noopDescribe(env));
+    });
+  }).not.toThrow();
+});
+
+Deno.test("addItNode's function is not called on construction", () => {
   const env = new Environment();
   const fn = mock.fn();
-  env.it("_", fn);
+  env.addItNode("_", fn);
   expect(fn).not.toHaveBeenCalled();
 });
 
@@ -59,7 +91,7 @@ Deno.test("addDescribeNode or addItNode adds to the current parent's children", 
   let describeNode, itNode;
 
   const parentNode = env.addDescribeNode("_", () => {
-    describeNode = env.addDescribeNode("_", noop);
+    describeNode = env.addDescribeNode("_", noopDescribe(env));
     itNode = env.addItNode("_", noop);
   });
 
@@ -71,11 +103,11 @@ Deno.test("describe() or it() throws when the headline is empty", () => {
   const env = new Environment();
 
   expect(() => {
-    env.describe("", noop);
+    env.describe("", noopDescribe(env));
   }).toThrow();
 
   expect(() => {
-    env.describe("   ", noop);
+    env.describe("   ", noopDescribe(env));
   }).toThrow();
 
   expect(() => {
@@ -87,7 +119,7 @@ Deno.test("describe() or it() throws when the headline is empty", () => {
   }).toThrow();
 
   expect(() => {
-    env.describe(" _ ", noop);
+    env.describe(" _ ", noopDescribe(env));
   }).not.toThrow();
 
   expect(() => {
@@ -101,7 +133,7 @@ Deno.test("describe() or it() skips itself if it has a focused sibling", () => {
   const parentNode = env.addDescribeNode("_", () => {
     focused = env.addItNode("_", noop);
     focused.focus();
-    env.describe("_", noop);
+    env.describe("_", noopDescribe(env));
     env.it("_", noop);
   });
 
@@ -119,6 +151,8 @@ Deno.test("calling a hook creator adds a hook to the current parent", () => {
     env.beforeEach(noop);
     env.afterEach(noop);
     env.afterAll(noop);
+
+    noopDescribe(env)();
   });
   expect(parentNode.beforeAll.length).toBe(1);
   expect(parentNode.beforeEach.length).toBe(1);
@@ -133,7 +167,7 @@ Deno.test("calling a hook or creating a node inside it() throws", () => {
     env.beforeEach(noop);
     env.afterEach(noop);
     env.afterAll(noop);
-    env.describe("_", noop);
+    env.describe("_", noopDescribe(env));
   });
   env.root.isRunning = true;
   expect(itNode.fn).toThrow();
@@ -141,7 +175,7 @@ Deno.test("calling a hook or creating a node inside it() throws", () => {
 
 Deno.test("node.skip() skips all of its children", () => {
   const env = new Environment();
-  const unskippedNode = env.addDescribeNode("_", noop);
+  const unskippedNode = env.addDescribeNode("_", noopDescribe(env));
   const describeNode = env.addDescribeNode("_", () => {
     env.addItNode("_", noop);
     env.addDescribeNode("_", () => {
@@ -188,7 +222,7 @@ Deno.test("node.fail() on an ItNode sets the error to the given value", () => {
 Deno.test("node.fail() calls .fail() on the parent", () => {
   const parent = new RootNode();
   const itNode = new ItNode("_", noop, parent);
-  const describeNode = new ItNode("_", noop, parent);
+  const describeNode = new DescribeNode("_", parent);
   parent.fail = mock.fn();
   itNode.fail();
   describeNode.fail();
