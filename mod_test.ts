@@ -46,6 +46,8 @@ describe("test", () => {
         throw new Error("this should not run");
       });
     });
+
+    it("_", noop);
   });
 
   describe("only", () => {

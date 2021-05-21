@@ -55,7 +55,7 @@ Deno.test("addDescribeNode's function is called on construction", () => {
   expect(fn).toHaveBeenCalled();
 });
 
-Deno.test("addDescribeNode throws when there are no cases", () => {
+Deno.test("addDescribeNode throws when there are no running cases", () => {
   const env = new Environment();
 
   expect(() => {
@@ -69,12 +69,31 @@ Deno.test("addDescribeNode throws when there are no cases", () => {
   }).toThrow();
 
   expect(() => {
+    env.addDescribeNode("_", () => {
+      env.itSkip("_", noop);
+    });
+  }).toThrow();
+
+  expect(() => {
     env.addDescribeNode("_", noopDescribe(env));
   }).not.toThrow();
 
   expect(() => {
     env.addDescribeNode("_", () => {
       env.addDescribeNode("_", noopDescribe(env));
+    });
+  }).not.toThrow();
+
+  expect(() => {
+    env.describeSkip("_", () => {
+      env.it("_", noop);
+    });
+  }).not.toThrow();
+
+  expect(() => {
+    env.describe("_", () => {
+      env.describeSkip("_", noopDescribe(env));
+      env.it("_", noop);
     });
   }).not.toThrow();
 });

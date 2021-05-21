@@ -32,9 +32,11 @@ function assertNotEmpty(headline: string) {
 function hasCase(node: DescribeNode | RootNode): boolean {
   for (const child of node.children) {
     if (child instanceof ItNode) {
+      if (!child.skipped) {
+        return true;
+      }
+    } else if (hasCase(child)) {
       return true;
-    } else {
-      return hasCase(child);
     }
   }
   return false;
@@ -163,7 +165,6 @@ export class ItNode implements ChildNode {
 
   focus() {
     this.focused = true;
-    this.parent.hasFocused = true;
     this.parent.updateFocusedChildren();
   }
 
@@ -183,11 +184,10 @@ export class ItNode implements ChildNode {
 }
 
 export class Environment {
-  root: RootNode;
+  root: RootNode = new RootNode();
   private currentNode: RootNode | DescribeNode;
 
   constructor() {
-    this.root = new RootNode();
     this.currentNode = this.root;
   }
 

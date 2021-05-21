@@ -27,13 +27,13 @@ function findChildWithCase(
 
 // Find the child that will run the beforeAll/afterAll hooks
 
-function findChildWithFirstCase(
+export function findChildWithFirstCase(
   node: DescribeNode | RootNode,
 ): FindChildResult {
   return findChildWithCase(node.children, findChildWithFirstCase);
 }
 
-function findChildWithLastCase(
+export function findChildWithLastCase(
   node: DescribeNode | RootNode,
 ): FindChildResult {
   return findChildWithCase([...node.children].reverse(), findChildWithLastCase);
