@@ -29,7 +29,7 @@ class BlankReporter implements Reporter {
 Deno.test("runRoot calls .start() on the node", () => {
   const root = new RootNode();
   root.start = mock.fn();
-  new Runner(Deno.test, new BlankReporter()).runRoot(root);
+  new Runner(new BlankReporter()).runRoot(root);
   expect(root.start).toHaveBeenCalled();
 });
 
@@ -46,7 +46,8 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
     order.push("3");
   });
 
-  const runner = new Runner(testMethod, new BlankReporter());
+  const runner = new Runner(new BlankReporter());
+  runner.test = testMethod;
   runner.runIt(
     it,
     [
@@ -85,7 +86,8 @@ Deno.test("runNode runs hooks in the correct order", async () => {
 
   const order: string[] = [];
   const env = new Environment();
-  const runner = new Runner(testMethod, new BlankReporter());
+  const runner = new Runner(new BlankReporter());
+  runner.test = testMethod;
 
   env.beforeAll(() => {
     order.push("1 - beforeAll");

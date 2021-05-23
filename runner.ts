@@ -8,11 +8,10 @@ export type TestMethod = {
 };
 
 export class Runner {
-  test: TestMethod;
+  test = Deno.test;
   reporter: Reporter;
 
-  constructor(testFn: TestMethod, reporter: Reporter) {
-    this.test = testFn;
+  constructor(reporter: Reporter) {
     this.reporter = reporter;
   }
 

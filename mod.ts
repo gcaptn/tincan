@@ -3,7 +3,7 @@ import { TestReporter } from "./reporter.ts";
 import { Runner } from "./runner.ts";
 
 const env = new Environment();
-const runner = new Runner(Deno.test, new TestReporter());
+const runner = new Runner(new TestReporter());
 
 export function describe(headline: string, fn: () => void) {
   env.describe(headline, fn);
