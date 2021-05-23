@@ -16,11 +16,11 @@ runNode
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 import { Environment, RootNode } from "./nodes.ts";
+import { TestReporter } from "./reporter.ts"; // todo: fake a reporter
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
-  runNode,
-  runRoot,
+  Runner,
 } from "./runner.ts";
 
 function noop() {}
@@ -28,7 +28,7 @@ function noop() {}
 Deno.test("runRoot calls .start() on the node", () => {
   const root = new RootNode();
   root.start = mock.fn();
-  runRoot(root, noop);
+  new Runner(Deno.test, new TestReporter()).runRoot(root);
   expect(root.start).toHaveBeenCalled();
 });
 
@@ -99,7 +99,7 @@ env.describe("_", () => {
   });
 });
 
-runNode(env.root);
+new Runner(Deno.test, new TestReporter()).runNode(env.root);
 
 Deno.test("runNode runs hooks in the correct order", () => {
   expect(order).toEqual([

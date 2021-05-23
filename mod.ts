@@ -1,7 +1,9 @@
 import { Environment, TestFunction } from "./nodes.ts";
-import { runNode } from "./runner.ts";
+import { TestReporter } from "./reporter.ts";
+import { Runner } from "./runner.ts";
 
 const env = new Environment();
+const runner = new Runner(Deno.test, new TestReporter());
 
 export function describe(headline: string, fn: () => void) {
   env.describe(headline, fn);
@@ -41,7 +43,7 @@ export function afterAll(fn: TestFunction) {
 }
 
 export function run() {
-  runNode(env.root);
+  runner.runNode(env.root);
 }
 
 export { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
