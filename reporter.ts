@@ -1,4 +1,5 @@
 import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
+import { getAncestry } from "./nodes_util.ts";
 import {
   bold,
   gray,
@@ -8,16 +9,6 @@ import {
 
 const log = console.log;
 const logError = console.error;
-
-function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
-  const ancestors: DescribeNode[] = [];
-  let lastAncestor = node.parent;
-  while (lastAncestor instanceof DescribeNode) {
-    ancestors.push(lastAncestor);
-    lastAncestor = lastAncestor.parent;
-  }
-  return ancestors.reverse();
-}
 
 function indent(depth: number) {
   return "  ".repeat(depth);

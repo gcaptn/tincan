@@ -1,40 +1,11 @@
 import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
+import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
 import { Reporter } from "./reporter.ts";
-
-type FindChildResult = ItNode | DescribeNode | undefined;
 
 export type TestMethod = {
   (t: Deno.TestDefinition): void;
   (name: string, fn: () => void | Promise<void>): void;
 };
-
-function findChildWithCase(
-  children: (ItNode | DescribeNode)[],
-  recursiveSearch: (node: (DescribeNode | RootNode)) => FindChildResult,
-): FindChildResult {
-  for (const child of children) {
-    if (
-      child.skipped === false &&
-      (child instanceof ItNode || recursiveSearch(child as DescribeNode))
-    ) {
-      return child;
-    }
-  }
-}
-
-// Find the child that will run the beforeAll/afterAll hooks
-
-export function findChildWithFirstCase(
-  node: DescribeNode | RootNode,
-): FindChildResult {
-  return findChildWithCase(node.children, findChildWithFirstCase);
-}
-
-export function findChildWithLastCase(
-  node: DescribeNode | RootNode,
-): FindChildResult {
-  return findChildWithCase([...node.children].reverse(), findChildWithLastCase);
-}
 
 export class Runner {
   test: TestMethod;

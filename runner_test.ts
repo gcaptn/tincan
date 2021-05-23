@@ -1,11 +1,5 @@
 /*
 
-findChildWithFirstCase
-  finds the child that will run the first case
-
-findChildWithLastCase
-  finds the child that will run the last case
-
 Runner.runRoot
   calls .start() on the node
 
@@ -20,12 +14,7 @@ Runner.runNode
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 import { Environment, Hook, RootNode, TestFunction } from "./nodes.ts";
 import { Reporter } from "./reporter.ts";
-import {
-  findChildWithFirstCase,
-  findChildWithLastCase,
-  Runner,
-  TestMethod,
-} from "./runner.ts";
+import { Runner, TestMethod } from "./runner.ts";
 
 class BlankReporter implements Reporter {
   getFullCaseName() {
@@ -36,37 +25,6 @@ class BlankReporter implements Reporter {
   reportHookError() {}
   reportCase() {}
 }
-
-function noop() {}
-
-function findChildEnv() {
-  const env = new Environment();
-
-  env.describeSkip("_", () => {
-    env.it("_", noop);
-  });
-
-  const first = env.addDescribeNode("_", () => {
-    env.it("_", noop);
-  });
-
-  const last = env.addDescribeNode("_", () => {
-    env.itSkip("_", noop);
-    env.it("_", noop);
-  });
-
-  return { env, first, last };
-}
-
-Deno.test("findChildWithFirstCase finds the child that will run the first case", () => {
-  const { env, first } = findChildEnv();
-  expect(findChildWithFirstCase(env.root)).toBe(first);
-});
-
-Deno.test("findChildWithLastCase finds the child that will run the first case", () => {
-  const { env, last } = findChildEnv();
-  expect(findChildWithLastCase(env.root)).toBe(last);
-});
 
 Deno.test("runRoot calls .start() on the node", () => {
   const root = new RootNode();
