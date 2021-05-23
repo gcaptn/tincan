@@ -6,31 +6,38 @@ findChildWithFirstCase
 findChildWithLastCase
   finds the child that will run the last case
 
-runRoot
+Runner.runRoot
   calls .start() on the node
 
-runNode
+Runner.runIt
+  's function calls the node's function and hooks
+
+Runner.runNode
   runs hooks in the correct order
 
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { Environment, RootNode } from "./nodes.ts";
-import { TestReporter } from "./reporter.ts"; // todo: fake a reporter
+import { Environment, Hook, RootNode, TestFunction } from "./nodes.ts";
+import { Reporter } from "./reporter.ts";
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
   Runner,
+  TestMethod,
 } from "./runner.ts";
 
-function noop() {}
+class BlankReporter implements Reporter {
+  getFullCaseName() {
+    return "_";
+  }
+  reportStart() {}
+  reportEnd() {}
+  reportHookError() {}
+  reportCase() {}
+}
 
-Deno.test("runRoot calls .start() on the node", () => {
-  const root = new RootNode();
-  root.start = mock.fn();
-  new Runner(Deno.test, new TestReporter()).runRoot(root);
-  expect(root.start).toHaveBeenCalled();
-});
+function noop() {}
 
 function findChildEnv() {
   const env = new Environment();
@@ -61,47 +68,105 @@ Deno.test("findChildWithLastCase finds the child that will run the first case", 
   expect(findChildWithLastCase(env.root)).toBe(last);
 });
 
-const order: string[] = [];
-
-const env = new Environment();
-
-env.beforeAll(() => {
-  order.push("1 - beforeAll");
-});
-env.beforeEach(() => {
-  order.push("1 - beforeEach");
-});
-env.afterEach(() => {
-  order.push("1 - afterEach");
-});
-env.afterAll(() => {
-  order.push("1 - afterAll");
-});
-env.it("__", () => {
-  order.push("1 - it");
+Deno.test("runRoot calls .start() on the node", () => {
+  const root = new RootNode();
+  root.start = mock.fn();
+  new Runner(Deno.test, new BlankReporter()).runRoot(root);
+  expect(root.start).toHaveBeenCalled();
 });
 
-env.describe("_", () => {
+Deno.test("Runner.runIt's function calls the node's function and hooks", async () => {
+  const order: string[] = [];
+
+  const registered: TestFunction[] = [];
+  const testMethod: TestMethod = (t: Deno.TestDefinition | string) => {
+    const options = t as Deno.TestDefinition;
+    registered.push(options.fn);
+  };
+
+  const it = new Environment().addItNode("_", () => {
+    order.push("3");
+  });
+
+  const runner = new Runner(testMethod, new BlankReporter());
+  runner.runIt(
+    it,
+    [
+      new Hook("beforeAll", () => {
+        order.push("1");
+      }),
+    ],
+    [
+      new Hook("beforeEach", () => {
+        order.push("2");
+      }),
+    ],
+    [
+      new Hook("afterEach", () => {
+        order.push("4");
+      }),
+    ],
+    [
+      new Hook("afterAll", () => {
+        order.push("5");
+      }),
+    ],
+  );
+
+  await registered[0]();
+
+  expect(order).toEqual(["1", "2", "3", "4", "5"]);
+});
+
+Deno.test("runNode runs hooks in the correct order", async () => {
+  const registered: TestFunction[] = [];
+  const testMethod: TestMethod = (t: Deno.TestDefinition | string) => {
+    const options = t as Deno.TestDefinition;
+    registered.push(options.fn);
+  };
+
+  const order: string[] = [];
+  const env = new Environment();
+  const runner = new Runner(testMethod, new BlankReporter());
+
   env.beforeAll(() => {
-    order.push("2 - beforeAll");
+    order.push("1 - beforeAll");
   });
   env.beforeEach(() => {
-    order.push("2 - beforeEach");
+    order.push("1 - beforeEach");
   });
   env.afterEach(() => {
-    order.push("2 - afterEach");
+    order.push("1 - afterEach");
   });
   env.afterAll(() => {
-    order.push("2 - afterAll");
+    order.push("1 - afterAll");
   });
   env.it("__", () => {
-    order.push("2 - it");
+    order.push("1 - it");
   });
-});
 
-new Runner(Deno.test, new TestReporter()).runNode(env.root);
+  env.describe("_", () => {
+    env.beforeAll(() => {
+      order.push("2 - beforeAll");
+    });
+    env.beforeEach(() => {
+      order.push("2 - beforeEach");
+    });
+    env.afterEach(() => {
+      order.push("2 - afterEach");
+    });
+    env.afterAll(() => {
+      order.push("2 - afterAll");
+    });
+    env.it("__", () => {
+      order.push("2 - it");
+    });
+  });
 
-Deno.test("runNode runs hooks in the correct order", () => {
+  runner.runNode(env.root);
+
+  for (const fn of registered) await fn();
+
   expect(order).toEqual([
     "1 - beforeAll",
     "1 - beforeEach",

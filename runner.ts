@@ -3,7 +3,7 @@ import { Reporter } from "./reporter.ts";
 
 type FindChildResult = ItNode | DescribeNode | undefined;
 
-type TestFn = {
+export type TestMethod = {
   (t: Deno.TestDefinition): void;
   (name: string, fn: () => void | Promise<void>): void;
 };
@@ -37,10 +37,10 @@ export function findChildWithLastCase(
 }
 
 export class Runner {
-  test: TestFn;
+  test: TestMethod;
   reporter: Reporter;
 
-  constructor(testFn: TestFn, reporter: Reporter) {
+  constructor(testFn: TestMethod, reporter: Reporter) {
     this.test = testFn;
     this.reporter = reporter;
   }
