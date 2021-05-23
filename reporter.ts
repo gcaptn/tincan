@@ -47,7 +47,7 @@ function formatNode(
   return nodes;
 } */
 
-export type Reporter = {
+export type TestReporter = {
   getFullCaseName: (node: ItNode) => string;
   reportStart: (node: RootNode) => void;
   reportEnd: (node: RootNode) => void;
@@ -55,7 +55,7 @@ export type Reporter = {
   reportCase: (node: ItNode) => void;
 };
 
-export class TestReporter implements Reporter {
+export class Reporter implements TestReporter {
   getFullCaseName(node: ItNode) {
     const hierarchy = getAncestry(node)
       .map((node: DescribeNode | ItNode) => gray(node.headline));

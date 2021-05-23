@@ -1,9 +1,9 @@
 import { Environment, TestFunction } from "./nodes.ts";
-import { TestReporter } from "./reporter.ts";
+import { Reporter } from "./reporter.ts";
 import { Runner } from "./runner.ts";
 
 const env = new Environment();
-const runner = new Runner(new TestReporter());
+const runner = new Runner(new Reporter());
 
 export function describe(headline: string, fn: () => void) {
   env.describe(headline, fn);

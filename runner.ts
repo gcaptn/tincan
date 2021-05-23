@@ -1,6 +1,6 @@
 import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
 import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
-import { Reporter } from "./reporter.ts";
+import { TestReporter } from "./reporter.ts";
 
 export type TestMethod = {
   (t: Deno.TestDefinition): void;
@@ -8,10 +8,10 @@ export type TestMethod = {
 };
 
 export class Runner {
-  test = Deno.test;
-  reporter: Reporter;
+  test: TestMethod = Deno.test;
+  reporter: TestReporter;
 
-  constructor(reporter: Reporter) {
+  constructor(reporter: TestReporter) {
     this.reporter = reporter;
   }
 
