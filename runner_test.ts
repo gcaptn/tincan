@@ -12,18 +12,19 @@ Runner.runNode
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { Environment, Hook, RootNode, TestFunction } from "./nodes.ts";
+import { Environment, Hook, ItNode, RootNode, TestFunction } from "./nodes.ts";
 import { Reporter } from "./reporter.ts";
-import { Runner, TestMethod } from "./runner.ts";
+import { Runner } from "./runner.ts";
 
 class BlankReporter implements Reporter {
-  getFullCaseName() {
-    return "_";
-  }
   reportStart() {}
   reportEnd() {}
   reportHookError() {}
   reportCase() {}
+}
+
+async function testMethod(_: ItNode, wrappedFn: TestFunction) {
+  await wrappedFn();
 }
 
 Deno.test("runRoot calls .start() on the node", () => {
@@ -36,19 +37,14 @@ Deno.test("runRoot calls .start() on the node", () => {
 Deno.test("Runner.runIt's function calls the node's function and hooks", async () => {
   const order: string[] = [];
 
-  const registered: TestFunction[] = [];
-  const testMethod: TestMethod = (t: Deno.TestDefinition | string) => {
-    const options = t as Deno.TestDefinition;
-    registered.push(options.fn);
-  };
-
   const it = new Environment().addItNode("_", () => {
     order.push("3");
   });
 
   const runner = new Runner(new BlankReporter());
   runner.test = testMethod;
-  runner.runIt(
+
+  await runner.runIt(
     it,
     [
       new Hook("beforeAll", () => {
@@ -72,18 +68,10 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
     ],
   );
 
-  await registered[0]();
-
   expect(order).toEqual(["1", "2", "3", "4", "5"]);
 });
 
 Deno.test("runNode runs hooks in the correct order", async () => {
-  const registered: TestFunction[] = [];
-  const testMethod: TestMethod = (t: Deno.TestDefinition | string) => {
-    const options = t as Deno.TestDefinition;
-    registered.push(options.fn);
-  };
-
   const order: string[] = [];
   const env = new Environment();
   const runner = new Runner(new BlankReporter());
@@ -123,9 +111,7 @@ Deno.test("runNode runs hooks in the correct order", async () => {
     });
   });
 
-  runner.runNode(env.root);
-
-  for (const fn of registered) await fn();
+  await runner.runNode(env.root);
 
   expect(order).toEqual([
     "1 - beforeAll",

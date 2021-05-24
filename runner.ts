@@ -1,21 +1,15 @@
-import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, Hook, ItNode, RootNode, TestFunction } from "./nodes.ts";
 import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
-import { TestReporter } from "./reporter.ts";
-
-export type TestMethod = {
-  (t: Deno.TestDefinition): void;
-  (name: string, fn: () => void | Promise<void>): void;
-};
+import { getFullCaseName, TestReporter } from "./reporter.ts";
 
 export class Runner {
-  test: TestMethod = Deno.test;
   reporter: TestReporter;
 
   constructor(reporter: TestReporter) {
     this.reporter = reporter;
   }
 
-  runNode(
+  async runNode(
     node: RootNode | DescribeNode | ItNode,
     beforeHooks: Hook[] = [],
     beforeEachHooks: Hook[] = [],
@@ -23,9 +17,9 @@ export class Runner {
     afterHooks: Hook[] = [],
   ) {
     if (node instanceof RootNode) {
-      this.runRoot(node);
+      await this.runRoot(node);
     } else if (node instanceof DescribeNode) {
-      this.runDescribe(
+      await this.runDescribe(
         node,
         beforeHooks,
         beforeEachHooks,
@@ -33,7 +27,7 @@ export class Runner {
         afterHooks,
       );
     } else {
-      this.runIt(
+      await this.runIt(
         node,
         beforeHooks,
         beforeEachHooks,
@@ -51,14 +45,14 @@ export class Runner {
     }
   }
 
-  runRoot(node: RootNode) {
+  async runRoot(node: RootNode) {
     node.start();
     this.reporter.reportStart(node);
 
     const childWithFirstCase = findChildWithFirstCase(node);
     const childWithLastCase = findChildWithLastCase(node);
 
-    node.children.forEach((child) => {
+    for (const child of node.children) {
       let childBeforeHooks: Hook[] = [];
       let childAfterHooks: Hook[] = [];
 
@@ -76,17 +70,17 @@ export class Runner {
         );
       }
 
-      this.runNode(
+      await this.runNode(
         child,
         childBeforeHooks,
         [...node.beforeEach],
         [...node.afterEach],
         childAfterHooks,
       );
-    });
+    }
   }
 
-  runDescribe(
+  async runDescribe(
     node: DescribeNode,
     beforeHooks: Hook[],
     beforeEachHooks: Hook[],
@@ -96,7 +90,7 @@ export class Runner {
     const childWithFirstCase = findChildWithFirstCase(node);
     const childWithLastCase = findChildWithLastCase(node);
 
-    node.children.forEach((child) => {
+    for (const child of node.children) {
       let childBeforeHooks: Hook[] = [];
       let childAfterHooks: Hook[] = [];
 
@@ -108,17 +102,17 @@ export class Runner {
         childAfterHooks = [...node.afterAll, ...afterHooks];
       }
 
-      this.runNode(
+      await this.runNode(
         child,
         childBeforeHooks,
         [...beforeEachHooks, ...node.beforeEach],
         [...node.afterEach, ...afterEachHooks],
         childAfterHooks,
       );
-    });
+    }
   }
 
-  runIt(
+  async runIt(
     node: ItNode,
     beforeHooks: Hook[],
     beforeEachHooks: Hook[],
@@ -164,9 +158,13 @@ export class Runner {
       }
     };
 
-    this.test({
-      name: this.reporter.getFullCaseName(node),
-      fn: wrappedFn,
+    await this.test(node, wrappedFn);
+  }
+
+  test(node: ItNode, fn: TestFunction) {
+    Deno.test({
+      name: getFullCaseName(node),
+      fn,
       ignore: node.skipped,
     });
   }

@@ -47,8 +47,14 @@ function formatNode(
   return nodes;
 } */
 
+export function getFullCaseName(node: ItNode) {
+  const hierarchy = getAncestry(node)
+    .map((node: DescribeNode | ItNode) => gray(node.headline));
+  hierarchy.push(bold(node.headline));
+  return hierarchy.join(" > ");
+}
+
 export type TestReporter = {
-  getFullCaseName: (node: ItNode) => string;
   reportStart: (node: RootNode) => void;
   reportEnd: (node: RootNode) => void;
   reportHookError: (hook: Hook, error: unknown) => void;
@@ -56,13 +62,6 @@ export type TestReporter = {
 };
 
 export class Reporter implements TestReporter {
-  getFullCaseName(node: ItNode) {
-    const hierarchy = getAncestry(node)
-      .map((node: DescribeNode | ItNode) => gray(node.headline));
-    hierarchy.push(bold(node.headline));
-    return hierarchy.join(" > ");
-  }
-
   reportStart(node: RootNode) {
     log(formatNode(node));
   }
@@ -86,6 +85,7 @@ export class Reporter implements TestReporter {
     const result = node.result === "PASS"
       ? green(node.result)
       : red(node.result);
+
     console.log([
       `Result: ${result}`,
       `Cases: ` +
