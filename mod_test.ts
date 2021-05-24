@@ -1,12 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  it,
-  run,
-} from "./mod.ts";
+import { beforeAll, describe, it, run } from "./mod.ts";
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
 const noop = () => {};
@@ -88,61 +80,6 @@ describe("test", () => {
         throw new Error("hook error");
       });
       it("should catch and report hook errors", noop);
-    });
-
-    const order: string[] = [];
-
-    describe("hooks execution order", () => {
-      beforeAll(() => {
-        order.push("1 - beforeAll");
-      });
-      beforeEach(() => {
-        order.push("1 - beforeEach");
-      });
-      afterEach(() => {
-        order.push("1 - afterEach");
-      });
-      afterAll(() => {
-        order.push("1 - afterAll");
-      });
-      it("__", () => {
-        order.push("1 - it");
-      });
-
-      describe("nested describe", () => {
-        beforeAll(() => {
-          order.push("2 - beforeAll");
-        });
-        beforeEach(() => {
-          order.push("2 - beforeEach");
-        });
-        afterEach(() => {
-          order.push("2 - afterEach");
-        });
-        afterAll(() => {
-          order.push("2 - afterAll");
-        });
-        it("__", () => {
-          order.push("2 - it");
-        });
-      });
-    });
-
-    it("should execute in the correct order", () => {
-      expect(order).toEqual([
-        "1 - beforeAll",
-        "1 - beforeEach",
-        "1 - it",
-        "1 - afterEach",
-        "2 - beforeAll",
-        "1 - beforeEach",
-        "2 - beforeEach",
-        "2 - it",
-        "2 - afterEach",
-        "1 - afterEach",
-        "2 - afterAll",
-        "1 - afterAll",
-      ]);
     });
   });
 });
