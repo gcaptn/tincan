@@ -12,7 +12,6 @@
     <a href="https://deno.land/x/tincan"><img alt="deno.land/x" src="http://img.shields.io/badge/available%20on-deno.land/x-lightgrey.svg?logo=deno&labelColor=black" /></a>
 </p>
 
-
 ## Features
 
 - Nested suites / cases
