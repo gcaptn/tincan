@@ -1,7 +1,7 @@
 import { beforeAll, describe, it, run } from "./mod.ts";
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
-const noop = () => {};
+function noop() {}
 
 describe("test", () => {
   it("should wait for promises", () => {
