@@ -191,16 +191,16 @@ export class Environment {
     this.currentNode = this.root;
   }
 
-  private assertDescribeOrRootOnly(method: string) {
+  private assertNotRunning(method: string) {
     if (this.root.isRunning) {
       throw new Error(
-        `${method} can only be called at the top level or directly within describe()`,
+        `${method} cannot be called while tests are running!`,
       );
     }
   }
 
   addDescribeNode(headline: string, fn: () => void) {
-    this.assertDescribeOrRootOnly("describe()");
+    this.assertNotRunning("describe()");
     const parent = this.currentNode;
     const node = new DescribeNode(headline, parent);
     parent.children.push(node);
@@ -229,7 +229,7 @@ export class Environment {
   }
 
   addItNode(headline: string, fn: TestFunction) {
-    this.assertDescribeOrRootOnly("it()");
+    this.assertNotRunning("it()");
     const parent = this.currentNode;
     const node = new ItNode(headline, fn, parent);
     parent.children.push(node);
@@ -254,22 +254,22 @@ export class Environment {
   }
 
   beforeAll(fn: TestFunction) {
-    this.assertDescribeOrRootOnly("beforeAll()");
+    this.assertNotRunning("beforeAll()");
     this.currentNode.beforeAll.push(new Hook("beforeAll", fn));
   }
 
   beforeEach(fn: TestFunction) {
-    this.assertDescribeOrRootOnly("beforeEach()");
+    this.assertNotRunning("beforeEach()");
     this.currentNode.beforeEach.push(new Hook("beforeEach", fn));
   }
 
   afterEach(fn: TestFunction) {
-    this.assertDescribeOrRootOnly("afterEach()");
+    this.assertNotRunning("afterEach()");
     this.currentNode.afterEach.unshift(new Hook("afterEach", fn));
   }
 
   afterAll(fn: TestFunction) {
-    this.assertDescribeOrRootOnly("afterAll()");
+    this.assertNotRunning("afterAll()");
     this.currentNode.afterAll.unshift(new Hook("afterAll", fn));
   }
 }
