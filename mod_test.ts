@@ -1,4 +1,12 @@
-import { beforeAll, describe, it, run } from "./mod.ts";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  it,
+  run,
+} from "./mod.ts";
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
 function noop() {}
@@ -11,6 +19,18 @@ describe("test", () => {
   it("should refuse to add hooks within a case", () => {
     expect(() => {
       beforeAll(noop);
+    }).toThrow();
+
+    expect(() => {
+      beforeEach(noop);
+    }).toThrow();
+
+    expect(() => {
+      afterEach(noop);
+    }).toThrow();
+
+    expect(() => {
+      afterAll(noop);
     }).toThrow();
   });
 
@@ -85,3 +105,9 @@ describe("test", () => {
 });
 
 run();
+
+expect(() => {
+  it("should support running run() more than once", noop);
+}).not.toThrow();
+
+expect(run).not.toThrow();

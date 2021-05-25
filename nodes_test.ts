@@ -15,7 +15,6 @@ describe() or it()
   throws when the headline is empty
 
 calling a hook creator adds a hook to the current parent
-calling a hook or creating a node inside it() throws
 
 node.skip()
   skips all of its children
@@ -37,81 +36,81 @@ node.finish()
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { DescribeNode, Environment, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, ItNode, RootNode, Tree } from "./nodes.ts";
 
 function noop() {}
 
 // describe nodes should have at least one case
-function noopDescribe(env: Environment) {
+function noopDescribe(tree: Tree) {
   return () => {
-    env.it("_", noop);
+    tree.it("_", noop);
   };
 }
 
 Deno.test("addDescribeNode's function is called on construction", () => {
-  const env = new Environment();
-  const fn = mock.fn(noopDescribe(env));
-  env.addDescribeNode("_", fn);
+  const tree = new Tree();
+  const fn = mock.fn(noopDescribe(tree));
+  tree.addDescribeNode("_", fn);
   expect(fn).toHaveBeenCalled();
 });
 
 Deno.test("addDescribeNode throws when there are no running cases", () => {
-  const env = new Environment();
+  const tree = new Tree();
 
   expect(() => {
-    env.addDescribeNode("_", noop);
+    tree.addDescribeNode("_", noop);
   }).toThrow();
 
   expect(() => {
-    env.addDescribeNode("_", () => {
-      env.addDescribeNode("_", noop);
-    });
-  }).toThrow();
-
-  expect(() => {
-    env.addDescribeNode("_", () => {
-      env.itSkip("_", noop);
+    tree.addDescribeNode("_", () => {
+      tree.addDescribeNode("_", noop);
     });
   }).toThrow();
 
   expect(() => {
-    env.addDescribeNode("_", noopDescribe(env));
+    tree.addDescribeNode("_", () => {
+      tree.itSkip("_", noop);
+    });
+  }).toThrow();
+
+  expect(() => {
+    tree.addDescribeNode("_", noopDescribe(tree));
   }).not.toThrow();
 
   expect(() => {
-    env.addDescribeNode("_", () => {
-      env.addDescribeNode("_", noopDescribe(env));
+    tree.addDescribeNode("_", () => {
+      tree.addDescribeNode("_", noopDescribe(tree));
     });
   }).not.toThrow();
 
   expect(() => {
-    env.describeSkip("_", () => {
-      env.it("_", noop);
+    tree.describeSkip("_", () => {
+      tree.it("_", noop);
     });
   }).not.toThrow();
 
   expect(() => {
-    env.describe("_", () => {
-      env.describeSkip("_", noopDescribe(env));
-      env.it("_", noop);
+    tree.describe("_", () => {
+      tree.describeSkip("_", noopDescribe(tree));
+      tree.it("_", noop);
     });
   }).not.toThrow();
 });
 
 Deno.test("addItNode's function is not called on construction", () => {
-  const env = new Environment();
+  const tree = new Tree();
   const fn = mock.fn();
-  env.addItNode("_", fn);
+  tree.addItNode("_", fn);
   expect(fn).not.toHaveBeenCalled();
 });
 
 Deno.test("addDescribeNode or addItNode adds to the current parent's children", () => {
-  const env = new Environment();
+  const tree = new Tree();
   let describeNode, itNode;
 
-  const parentNode = env.addDescribeNode("_", () => {
-    describeNode = env.addDescribeNode("_", noopDescribe(env));
-    itNode = env.addItNode("_", noop);
+  const parentNode = tree.addDescribeNode("_", () => {
+    describeNode = tree.addDescribeNode("_", noopDescribe(tree));
+    itNode = tree.addItNode("_", noop);
   });
 
   expect(parentNode.children).toContain(describeNode);
@@ -119,41 +118,41 @@ Deno.test("addDescribeNode or addItNode adds to the current parent's children", 
 });
 
 Deno.test("describe() or it() throws when the headline is empty", () => {
-  const env = new Environment();
+  const tree = new Tree();
 
   expect(() => {
-    env.describe("", noopDescribe(env));
+    tree.describe("", noopDescribe(tree));
   }).toThrow();
 
   expect(() => {
-    env.describe("   ", noopDescribe(env));
+    tree.describe("   ", noopDescribe(tree));
   }).toThrow();
 
   expect(() => {
-    env.it("", noop);
+    tree.it("", noop);
   }).toThrow();
 
   expect(() => {
-    env.it("   ", noop);
+    tree.it("   ", noop);
   }).toThrow();
 
   expect(() => {
-    env.describe(" _ ", noopDescribe(env));
+    tree.describe(" _ ", noopDescribe(tree));
   }).not.toThrow();
 
   expect(() => {
-    env.it(" _ ", noop);
+    tree.it(" _ ", noop);
   }).not.toThrow();
 });
 
 Deno.test("describe() or it() skips itself if it has a focused sibling", () => {
-  const env = new Environment();
+  const tree = new Tree();
   let focused: ItNode;
-  const parentNode = env.addDescribeNode("_", () => {
-    focused = env.addItNode("_", noop);
+  const parentNode = tree.addDescribeNode("_", () => {
+    focused = tree.addItNode("_", noop);
     focused.focus();
-    env.describe("_", noopDescribe(env));
-    env.it("_", noop);
+    tree.describe("_", noopDescribe(tree));
+    tree.it("_", noop);
   });
 
   parentNode.children.forEach((child) => {
@@ -164,14 +163,14 @@ Deno.test("describe() or it() skips itself if it has a focused sibling", () => {
 });
 
 Deno.test("calling a hook creator adds a hook to the current parent", () => {
-  const env = new Environment();
-  const parentNode = env.addDescribeNode("_", () => {
-    env.beforeAll(noop);
-    env.beforeEach(noop);
-    env.afterEach(noop);
-    env.afterAll(noop);
+  const tree = new Tree();
+  const parentNode = tree.addDescribeNode("_", () => {
+    tree.beforeAll(noop);
+    tree.beforeEach(noop);
+    tree.afterEach(noop);
+    tree.afterAll(noop);
 
-    noopDescribe(env)();
+    noopDescribe(tree)();
   });
   expect(parentNode.beforeAll.length).toBe(1);
   expect(parentNode.beforeEach.length).toBe(1);
@@ -179,26 +178,13 @@ Deno.test("calling a hook creator adds a hook to the current parent", () => {
   expect(parentNode.afterAll.length).toBe(1);
 });
 
-Deno.test("calling a hook or creating a node inside it() throws", () => {
-  const env = new Environment();
-  const itNode = env.addItNode("_", () => {
-    env.beforeAll(noop);
-    env.beforeEach(noop);
-    env.afterEach(noop);
-    env.afterAll(noop);
-    env.describe("_", noopDescribe(env));
-  });
-  env.root.isRunning = true;
-  expect(itNode.fn).toThrow();
-});
-
 Deno.test("node.skip() skips all of its children", () => {
-  const env = new Environment();
-  const unskippedNode = env.addDescribeNode("_", noopDescribe(env));
-  const describeNode = env.addDescribeNode("_", () => {
-    env.addItNode("_", noop);
-    env.addDescribeNode("_", () => {
-      env.addItNode("_", noop);
+  const tree = new Tree();
+  const unskippedNode = tree.addDescribeNode("_", noopDescribe(tree));
+  const describeNode = tree.addDescribeNode("_", () => {
+    tree.addItNode("_", noop);
+    tree.addDescribeNode("_", () => {
+      tree.addItNode("_", noop);
     });
   });
 
@@ -215,9 +201,9 @@ Deno.test("node.skip() skips all of its children", () => {
 });
 
 Deno.test("node.focus() skips non-focused siblings", () => {
-  const env = new Environment();
-  const node = env.addItNode("_", noop);
-  const sibling = env.addItNode("_", noop);
+  const tree = new Tree();
+  const node = tree.addItNode("_", noop);
+  const sibling = tree.addItNode("_", noop);
   node.focus();
   expect(sibling.skipped).toBe(true);
 });

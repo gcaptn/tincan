@@ -64,7 +64,6 @@ export class RootNode implements ParentNode {
   beforeEach: Hook[] = [];
   afterEach: Hook[] = [];
   result: TestResult = "PASS";
-  isRunning = false;
   timeTaken = 0;
   startTime = 0;
   hasFocused = false;
@@ -81,7 +80,6 @@ export class RootNode implements ParentNode {
   start() {
     assertHasCase(this, "Tests");
     this.startTime = Date.now();
-    this.isRunning = true;
   }
 
   fail() {
@@ -183,7 +181,7 @@ export class ItNode implements ChildNode {
   }
 }
 
-export class Environment {
+export class Tree {
   root: RootNode = new RootNode();
   private currentNode: RootNode | DescribeNode;
 
@@ -191,16 +189,7 @@ export class Environment {
     this.currentNode = this.root;
   }
 
-  private assertNotRunning(method: string) {
-    if (this.root.isRunning) {
-      throw new Error(
-        `${method} cannot be called while tests are running!`,
-      );
-    }
-  }
-
   addDescribeNode(headline: string, fn: () => void) {
-    this.assertNotRunning("describe()");
     const parent = this.currentNode;
     const node = new DescribeNode(headline, parent);
     parent.children.push(node);
@@ -229,7 +218,6 @@ export class Environment {
   }
 
   addItNode(headline: string, fn: TestFunction) {
-    this.assertNotRunning("it()");
     const parent = this.currentNode;
     const node = new ItNode(headline, fn, parent);
     parent.children.push(node);
@@ -254,22 +242,18 @@ export class Environment {
   }
 
   beforeAll(fn: TestFunction) {
-    this.assertNotRunning("beforeAll()");
     this.currentNode.beforeAll.push(new Hook("beforeAll", fn));
   }
 
   beforeEach(fn: TestFunction) {
-    this.assertNotRunning("beforeEach()");
     this.currentNode.beforeEach.push(new Hook("beforeEach", fn));
   }
 
   afterEach(fn: TestFunction) {
-    this.assertNotRunning("afterEach()");
     this.currentNode.afterEach.unshift(new Hook("afterEach", fn));
   }
 
   afterAll(fn: TestFunction) {
-    this.assertNotRunning("afterAll()");
     this.currentNode.afterAll.unshift(new Hook("afterAll", fn));
   }
 }
