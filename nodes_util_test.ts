@@ -11,7 +11,7 @@ findChildWithLastCase
 
 */
 
-import { DescribeNode, Environment, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, ItNode, RootNode, Tree } from "./nodes.ts";
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
@@ -31,30 +31,30 @@ Deno.test("getAncestry returns a node's describe ancestors starting from the hig
 });
 
 function findChildEnv() {
-  const env = new Environment();
+  const tree = new Tree();
 
-  env.describeSkip("_", () => {
-    env.it("_", noop);
+  tree.describeSkip("_", () => {
+    tree.it("_", noop);
   });
 
-  const first = env.addDescribeNode("_", () => {
-    env.it("_", noop);
+  const first = tree.addDescribeNode("_", () => {
+    tree.it("_", noop);
   });
 
-  const last = env.addDescribeNode("_", () => {
-    env.itSkip("_", noop);
-    env.it("_", noop);
+  const last = tree.addDescribeNode("_", () => {
+    tree.itSkip("_", noop);
+    tree.it("_", noop);
   });
 
-  return { env, first, last };
+  return { tree, first, last };
 }
 
 Deno.test("findChildWithFirstCase finds the child that will run the first case", () => {
-  const { env, first } = findChildEnv();
-  expect(findChildWithFirstCase(env.root)).toBe(first);
+  const { tree, first } = findChildEnv();
+  expect(findChildWithFirstCase(tree.root)).toBe(first);
 });
 
 Deno.test("findChildWithLastCase finds the child that will run the first case", () => {
-  const { env, last } = findChildEnv();
-  expect(findChildWithLastCase(env.root)).toBe(last);
+  const { tree, last } = findChildEnv();
+  expect(findChildWithLastCase(tree.root)).toBe(last);
 });

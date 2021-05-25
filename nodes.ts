@@ -181,7 +181,7 @@ export class ItNode implements ChildNode {
   }
 }
 
-export class Environment {
+export class Tree {
   root: RootNode = new RootNode();
   private currentNode: RootNode | DescribeNode;
 
