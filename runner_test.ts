@@ -1,5 +1,8 @@
 /*
 
+Runner.setReporter
+  sets the runner's reporter
+
 Runner.runRoot
   calls .start() on the node
 
@@ -13,9 +16,16 @@ Runner.runNode
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 import { Hook, RootNode, Tree } from "./nodes.ts";
-import { SilentRunner } from "./test_util.ts";
+import { SilentReporter, SilentRunner } from "./test_util.ts";
 
-Deno.test("runRoot calls .start() on the node", () => {
+Deno.test("Runner.setReporter sets the runner's reporter", () => {
+  const reporter = new SilentReporter();
+  const runner = new SilentRunner();
+  runner.setReporter(reporter);
+  expect(runner.reporter).toBe(reporter);
+});
+
+Deno.test("Runner.runRoot calls .start() on the node", () => {
   const root = new RootNode();
   root.start = mock.fn();
   new SilentRunner().runRoot(root);
@@ -58,7 +68,7 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
   expect(order).toEqual(["1", "2", "3", "4", "5"]);
 });
 
-Deno.test("runNode runs hooks in the correct order", async () => {
+Deno.test("Runner.runNode runs hooks in the correct order", async () => {
   const order: string[] = [];
   const tree = new Tree();
   const runner = new SilentRunner();

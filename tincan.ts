@@ -1,10 +1,11 @@
 import { Hook, TestFunction, Tree } from "./nodes.ts";
-import { Reporter } from "./reporter.ts";
-import { Runner } from "./runner.ts";
+import { Reporter, TestReporter } from "./reporter.ts";
+import { Runner, TestRunner } from "./runner.ts";
 
 export class Tincan {
-  runner: Runner;
-  currentTree: Tree;
+  runner: TestRunner = new Runner();
+  reporter: TestReporter = new Reporter();
+  currentTree = new Tree();
 
   // Because run() can be called multiple times and there can be more than one
   // test tree, calling hooks/describe/it inside a test case will register it in
@@ -14,17 +15,18 @@ export class Tincan {
 
   private assertNotRunning(method: string) {
     if (this.isRunningCase) {
-      throw new Error(`${method} cannod be called inside a test case!`);
+      throw new Error(
+        `${method} cannot be called while a test case is running!`,
+      );
     }
   }
 
-  constructor() {
-    this.runner = new Runner(new Reporter());
-    this.currentTree = new Tree();
+  setRunner(runner: TestRunner) {
+    this.runner = runner;
   }
 
-  setup(_property: string, _value: unknown) {
-    // todo
+  setReporter(reporter: TestReporter) {
+    this.reporter = reporter;
   }
 
   async run() {
@@ -43,6 +45,7 @@ export class Tincan {
       }),
     );
 
+    this.runner.setReporter(this.reporter);
     await this.runner.runNode(tree.root);
   }
 
