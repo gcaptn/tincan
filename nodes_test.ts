@@ -15,7 +15,6 @@ describe() or it()
   throws when the headline is empty
 
 calling a hook creator adds a hook to the current parent
-calling a hook or creating a node inside it() throws
 
 node.skip()
   skips all of its children
@@ -177,19 +176,6 @@ Deno.test("calling a hook creator adds a hook to the current parent", () => {
   expect(parentNode.beforeEach.length).toBe(1);
   expect(parentNode.afterEach.length).toBe(1);
   expect(parentNode.afterAll.length).toBe(1);
-});
-
-Deno.test("calling a hook or creating a node inside it() throws", () => {
-  const env = new Environment();
-  const itNode = env.addItNode("_", () => {
-    env.beforeAll(noop);
-    env.beforeEach(noop);
-    env.afterEach(noop);
-    env.afterAll(noop);
-    env.describe("_", noopDescribe(env));
-  });
-  env.root.isRunning = true;
-  expect(itNode.fn).toThrow();
 });
 
 Deno.test("node.skip() skips all of its children", () => {
