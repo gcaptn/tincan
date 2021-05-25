@@ -1,7 +1,14 @@
 import { Tincan } from "./tincan.ts";
-import { TestFunction } from "./nodes.ts";
-import { TestReporter } from "./reporter.ts";
-import { TestRunner } from "./runner.ts";
+import { Reporter, TestReporter } from "./reporter.ts";
+import { Runner, TestRunner } from "./runner.ts";
+import {
+  DescribeNode,
+  Hook,
+  ItNode,
+  RootNode,
+  TestFunction,
+  Tree,
+} from "./nodes.ts";
 
 const tincan = new Tincan();
 
@@ -12,6 +19,13 @@ const tincanAPI = {
   setRunner(runner: TestRunner) {
     tincan.setRunner(runner);
   },
+  Hook,
+  ItNode,
+  DescribeNode,
+  RootNode,
+  Tree,
+  Reporter,
+  Runner,
 };
 
 export { tincanAPI as tincan };

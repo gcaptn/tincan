@@ -9,8 +9,10 @@ export class SilentReporter implements TestReporter {
   reportCase() {}
 }
 
-export async function silentTest(_: ItNode, wrappedFn: TestFunction) {
-  await wrappedFn();
+export async function silentTest(node: ItNode, wrappedFn: TestFunction) {
+  if (!node.skipped) {
+    await wrappedFn();
+  }
 }
 
 export class SilentRunner extends Runner {

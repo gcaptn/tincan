@@ -3,6 +3,7 @@ import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
 import { getFullCaseName, Reporter, TestReporter } from "./reporter.ts";
 
 export type TestRunner = {
+  test: (node: ItNode, fn: TestFunction) => void | Promise<void>;
   reporter: TestReporter;
   setReporter: (reporter: TestReporter) => void;
   runNode: (
