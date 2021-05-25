@@ -10,30 +10,10 @@ Tincan.run()
 */
 
 import { Tincan } from "./tincan.ts";
-import { ItNode, TestFunction } from "./nodes.ts";
-import { Runner } from "./runner.ts";
-import { Reporter } from "./reporter.ts";
+import { SilentRunner } from "./test_util.ts";
 import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
 function noop() {}
-
-class BlankReporter implements Reporter {
-  reportStart() {}
-  reportEnd() {}
-  reportHookError() {}
-  reportCase() {}
-}
-
-async function testMethod(_: ItNode, wrappedFn: TestFunction) {
-  await wrappedFn();
-}
-
-class SilentRunner extends Runner {
-  test = testMethod;
-  constructor() {
-    super(new BlankReporter());
-  }
-}
 
 Deno.test("Tincan refuses to add hooks within a test case", async () => {
   const tincan = new Tincan();

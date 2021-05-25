@@ -12,25 +12,13 @@ Runner.runNode
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes.ts";
-import { Reporter } from "./reporter.ts";
-import { Runner } from "./runner.ts";
-
-class BlankReporter implements Reporter {
-  reportStart() {}
-  reportEnd() {}
-  reportHookError() {}
-  reportCase() {}
-}
-
-async function testMethod(_: ItNode, wrappedFn: TestFunction) {
-  await wrappedFn();
-}
+import { Hook, RootNode, Tree } from "./nodes.ts";
+import { SilentRunner } from "./test_util.ts";
 
 Deno.test("runRoot calls .start() on the node", () => {
   const root = new RootNode();
   root.start = mock.fn();
-  new Runner(new BlankReporter()).runRoot(root);
+  new SilentRunner().runRoot(root);
   expect(root.start).toHaveBeenCalled();
 });
 
@@ -41,8 +29,7 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
     order.push("3");
   });
 
-  const runner = new Runner(new BlankReporter());
-  runner.test = testMethod;
+  const runner = new SilentRunner();
 
   await runner.runIt(
     it,
@@ -74,8 +61,7 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
 Deno.test("runNode runs hooks in the correct order", async () => {
   const order: string[] = [];
   const tree = new Tree();
-  const runner = new Runner(new BlankReporter());
-  runner.test = testMethod;
+  const runner = new SilentRunner();
 
   tree.beforeAll(() => {
     order.push("1 - beforeAll");
