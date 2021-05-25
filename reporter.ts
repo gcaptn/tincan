@@ -7,6 +7,13 @@ import {
   red,
 } from "https://deno.land/std@0.95.0/fmt/colors.ts";
 
+export type TestReporter = {
+  reportStart: (node: RootNode) => void;
+  reportEnd: (node: RootNode) => void;
+  reportHookError: (hook: Hook, error: unknown) => void;
+  reportCase: (node: ItNode) => void;
+};
+
 const log = console.log;
 const logError = console.error;
 
@@ -53,13 +60,6 @@ export function getFullCaseName(node: ItNode) {
   hierarchy.push(bold(node.headline));
   return hierarchy.join(" > ");
 }
-
-export type TestReporter = {
-  reportStart: (node: RootNode) => void;
-  reportEnd: (node: RootNode) => void;
-  reportHookError: (hook: Hook, error: unknown) => void;
-  reportCase: (node: ItNode) => void;
-};
 
 export class Reporter implements TestReporter {
   reportStart(node: RootNode) {

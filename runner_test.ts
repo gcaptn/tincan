@@ -1,5 +1,8 @@
 /*
 
+Runner.setReporter
+  sets the runner's reporter
+
 Runner.runRoot
   calls .start() on the node
 
@@ -12,25 +15,20 @@ Runner.runNode
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes.ts";
-import { Reporter } from "./reporter.ts";
-import { Runner } from "./runner.ts";
+import { Hook, RootNode, Tree } from "./nodes.ts";
+import { SilentReporter, SilentRunner } from "./test_util.ts";
 
-class BlankReporter implements Reporter {
-  reportStart() {}
-  reportEnd() {}
-  reportHookError() {}
-  reportCase() {}
-}
+Deno.test("Runner.setReporter sets the runner's reporter", () => {
+  const reporter = new SilentReporter();
+  const runner = new SilentRunner();
+  runner.setReporter(reporter);
+  expect(runner.reporter).toBe(reporter);
+});
 
-async function testMethod(_: ItNode, wrappedFn: TestFunction) {
-  await wrappedFn();
-}
-
-Deno.test("runRoot calls .start() on the node", () => {
+Deno.test("Runner.runRoot calls .start() on the node", () => {
   const root = new RootNode();
   root.start = mock.fn();
-  new Runner(new BlankReporter()).runRoot(root);
+  new SilentRunner().runRoot(root);
   expect(root.start).toHaveBeenCalled();
 });
 
@@ -41,8 +39,7 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
     order.push("3");
   });
 
-  const runner = new Runner(new BlankReporter());
-  runner.test = testMethod;
+  const runner = new SilentRunner();
 
   await runner.runIt(
     it,
@@ -71,11 +68,10 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
   expect(order).toEqual(["1", "2", "3", "4", "5"]);
 });
 
-Deno.test("runNode runs hooks in the correct order", async () => {
+Deno.test("Runner.runNode runs hooks in the correct order", async () => {
   const order: string[] = [];
   const tree = new Tree();
-  const runner = new Runner(new BlankReporter());
-  runner.test = testMethod;
+  const runner = new SilentRunner();
 
   tree.beforeAll(() => {
     order.push("1 - beforeAll");
