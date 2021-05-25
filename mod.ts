@@ -2,12 +2,24 @@ import { Environment, Hook, TestFunction } from "./nodes.ts";
 import { Reporter } from "./reporter.ts";
 import { Runner } from "./runner.ts";
 
-let env = new Environment();
-let isRunning = false;
 const runner = new Runner(new Reporter());
+let env = new Environment();
+
+// This will change before and after every test case to prevent
+// hooks/describe/it from being called inside a test case.
+// Otherwise, they slip into a new test environment
+let isRunningCase = false;
+
+const setRunningCase = new Hook("internal", () => {
+  isRunningCase = true;
+});
+
+const setNotRunningCase = new Hook("internal", () => {
+  isRunningCase = false;
+});
 
 function assertNotRunning(method: string) {
-  if (isRunning) {
+  if (isRunningCase) {
     throw new Error(`${method} cannod be called inside a test case!`);
   }
 }
@@ -18,12 +30,12 @@ export function describe(headline: string, fn: () => void) {
 }
 
 describe.only = function (headline: string, fn: () => void) {
-  assertNotRunning("describe()");
+  assertNotRunning("describe.only()");
   env.describeOnly(headline, fn);
 };
 
 describe.skip = function (headline: string, fn: () => void) {
-  assertNotRunning("describe()");
+  assertNotRunning("describe.skip()");
   env.describeSkip(headline, fn);
 };
 
@@ -33,12 +45,12 @@ export function it(headline: string, fn: TestFunction) {
 }
 
 it.only = function (headline: string, fn: TestFunction) {
-  assertNotRunning("it()");
+  assertNotRunning("it.only()");
   env.itOnly(headline, fn);
 };
 
 it.skip = function (headline: string, fn: TestFunction) {
-  assertNotRunning("it()");
+  assertNotRunning("it.skip()");
   env.itSkip(headline, fn);
 };
 
@@ -62,18 +74,10 @@ export function afterAll(fn: TestFunction) {
   env.afterAll(fn);
 }
 
-const setRunning = new Hook("internal", () => {
-  isRunning = true;
-});
-
-const setNotRunning = new Hook("internal", () => {
-  isRunning = false;
-});
-
 export function run() {
   const runningEnv = env;
-  runningEnv.root.beforeEach.unshift(setRunning);
-  runningEnv.root.afterEach.push(setNotRunning);
+  runningEnv.root.beforeEach.unshift(setRunningCase);
+  runningEnv.root.afterEach.push(setNotRunningCase);
   runner.runNode(runningEnv.root);
   env = new Environment();
 }
