@@ -6,10 +6,18 @@ import {
   describe,
   it,
   run,
+  tincan,
 } from "./mod.ts";
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
 function noop() {}
+
+describe("tincan public API", () => {
+  it("exports the correct members", () => {
+    expect(tincan.setReporter).toBeDefined();
+    expect(tincan.setRunner).toBeDefined();
+  });
+});
 
 describe("test", () => {
   it("should wait for promises", () => {

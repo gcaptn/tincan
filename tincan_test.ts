@@ -1,5 +1,8 @@
 /*
 
+Tincan.setReporter / Tincan.setRunner
+  sets the reporter and runner
+
 Tincan.run
   replaces the tree
   can run again when the previous run finishes
@@ -23,6 +26,20 @@ function createTestTincan() {
   tincan.setReporter(new SilentReporter());
   return tincan;
 }
+
+Deno.test("Tincan.setReporter / Tincan.setRunner sets the reporter and runner", () => {
+  const tincan = new Tincan();
+  const runner = new SilentRunner();
+  const reporter = new SilentReporter();
+  tincan.setRunner(runner);
+  tincan.setReporter(reporter);
+
+  expect(tincan.runner).toBe(runner);
+  expect(tincan.reporter).toBe(reporter);
+
+  // .run() will update the runner's reporter right before running
+  expect(tincan.runner.reporter).not.toBe(reporter);
+});
 
 Deno.test("Tincan.run replaces the tree", async () => {
   const tincan = createTestTincan();

@@ -1,6 +1,20 @@
 import { Tincan } from "./tincan.ts";
 import { TestFunction } from "./nodes.ts";
+import { TestReporter } from "./reporter.ts";
+import { TestRunner } from "./runner.ts";
+
 const tincan = new Tincan();
+
+const tincanAPI = {
+  setReporter(reporter: TestReporter) {
+    tincan.setReporter(reporter);
+  },
+  setRunner(runner: TestRunner) {
+    tincan.setRunner(runner);
+  },
+};
+
+export { tincanAPI as tincan };
 
 export function describe(headline: string, fn: () => void) {
   tincan.describe(headline, fn);
