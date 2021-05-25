@@ -5,9 +5,10 @@ import { Runner } from "./runner.ts";
 const runner = new Runner(new Reporter());
 let env = new Environment();
 
-// This will change before and after every test case to prevent
-// hooks/describe/it from being called inside a test case.
-// Otherwise, they slip into a new test environment
+// Because run() can be called multiple times and there can be more than one
+// test environment, calling hooks/describe/it inside a test case will
+// register it in another environment. This toggle will change before and after
+// every test case to lock the methods.
 let isRunningCase = false;
 
 const setRunningCase = new Hook("internal", () => {

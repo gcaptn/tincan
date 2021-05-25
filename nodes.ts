@@ -64,7 +64,6 @@ export class RootNode implements ParentNode {
   beforeEach: Hook[] = [];
   afterEach: Hook[] = [];
   result: TestResult = "PASS";
-  isRunning = false;
   timeTaken = 0;
   startTime = 0;
   hasFocused = false;
@@ -81,7 +80,6 @@ export class RootNode implements ParentNode {
   start() {
     assertHasCase(this, "Tests");
     this.startTime = Date.now();
-    this.isRunning = true;
   }
 
   fail() {
