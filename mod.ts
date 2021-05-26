@@ -1,52 +1,52 @@
 import { TestFunction } from "./nodes.ts";
-import * as tincanAPI from "./api.ts";
+import * as tincan from "./tincan.ts";
 
-const tincan = tincanAPI.tincan;
+export { tincan };
 
-export { tincanAPI as tincan };
+const env = tincan.env;
 
 export function describe(headline: string, fn: () => void) {
-  tincan.describe(headline, fn);
+  env.describe(headline, fn);
 }
 
 describe.only = function (headline: string, fn: () => void) {
-  tincan.describeOnly(headline, fn);
+  env.describeOnly(headline, fn);
 };
 
 describe.skip = function (headline: string, fn: () => void) {
-  tincan.describeSkip(headline, fn);
+  env.describeSkip(headline, fn);
 };
 
 export function it(headline: string, fn: TestFunction) {
-  tincan.it(headline, fn);
+  env.it(headline, fn);
 }
 
 it.only = function (headline: string, fn: TestFunction) {
-  tincan.itOnly(headline, fn);
+  env.itOnly(headline, fn);
 };
 
 it.skip = function (headline: string, fn: TestFunction) {
-  tincan.itSkip(headline, fn);
+  env.itSkip(headline, fn);
 };
 
 export function beforeAll(fn: TestFunction) {
-  tincan.beforeAll(fn);
+  env.beforeAll(fn);
 }
 
 export function beforeEach(fn: TestFunction) {
-  tincan.beforeEach(fn);
+  env.beforeEach(fn);
 }
 
 export function afterEach(fn: TestFunction) {
-  tincan.afterEach(fn);
+  env.afterEach(fn);
 }
 
 export function afterAll(fn: TestFunction) {
-  tincan.afterAll(fn);
+  env.afterAll(fn);
 }
 
 export function run() {
-  tincan.run();
+  env.run();
 }
 
 export { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";

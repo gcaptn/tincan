@@ -1,101 +1,23 @@
-import { Hook, TestFunction, Tree } from "./nodes.ts";
-import { Reporter, TestReporter } from "./reporter.ts";
-import { Runner, TestRunner } from "./runner.ts";
+// The tincan namespace in import { tincan } from ".../mod.ts".
+// Exposes API for custom runners and reporters, as well as the
+// environment instance
 
-export class Tincan {
-  runner: TestRunner = new Runner();
-  reporter: TestReporter = new Reporter();
-  currentTree = new Tree();
+import { Environment } from "./environment.ts";
+import { TestReporter } from "./reporter.ts";
+import { TestRunner } from "./runner.ts";
 
-  // Because run() can be called multiple times and there can be more than one
-  // test tree, calling hooks/describe/it inside a test case will register it in
-  // another tree. This toggle will change before and after every test case to
-  // lock the methods.
-  private isRunningCase = false;
+export const env = new Environment();
 
-  private assertNotRunning(method: string) {
-    if (this.isRunningCase) {
-      throw new Error(
-        `${method} cannot be called while a test case is running!`,
-      );
-    }
-  }
-
-  setRunner(runner: TestRunner) {
-    this.runner = runner;
-  }
-
-  setReporter(reporter: TestReporter) {
-    this.reporter = reporter;
-  }
-
-  async run() {
-    const tree = this.currentTree;
-    this.currentTree = new Tree();
-
-    tree.root.beforeEach.unshift(
-      new Hook("internal", () => {
-        this.isRunningCase = true;
-      }),
-    );
-
-    tree.root.afterEach.push(
-      new Hook("internal", () => {
-        this.isRunningCase = false;
-      }),
-    );
-
-    this.runner.setReporter(this.reporter);
-    await this.runner.runNode(tree.root);
-  }
-
-  describe(headline: string, fn: () => void) {
-    this.assertNotRunning("describe()");
-    this.currentTree.describe(headline, fn);
-  }
-
-  describeOnly(headline: string, fn: () => void) {
-    this.assertNotRunning("describe.only()");
-    this.currentTree.describeOnly(headline, fn);
-  }
-
-  describeSkip(headline: string, fn: () => void) {
-    this.assertNotRunning("describe.skip()");
-    this.currentTree.describeSkip(headline, fn);
-  }
-
-  it(headline: string, fn: TestFunction) {
-    this.assertNotRunning("it()");
-    this.currentTree.it(headline, fn);
-  }
-
-  itOnly(headline: string, fn: TestFunction) {
-    this.assertNotRunning("it.only()");
-    this.currentTree.itOnly(headline, fn);
-  }
-
-  itSkip(headline: string, fn: TestFunction) {
-    this.assertNotRunning("it.skip()");
-    this.currentTree.itSkip(headline, fn);
-  }
-
-  beforeAll(fn: TestFunction) {
-    this.assertNotRunning("beforeAll()");
-    this.currentTree.beforeAll(fn);
-  }
-
-  beforeEach(fn: TestFunction) {
-    this.assertNotRunning("beforeEach()");
-    this.currentTree.beforeEach(fn);
-  }
-
-  afterEach(fn: TestFunction) {
-    this.assertNotRunning("afterEach()");
-    this.currentTree.afterEach(fn);
-  }
-
-  afterAll(fn: TestFunction) {
-    this.assertNotRunning("afterAll()");
-    this.currentTree.afterAll(fn);
-  }
+export function setReporter(reporter: TestReporter) {
+  env.setReporter(reporter);
 }
+
+export function setRunner(runner: TestRunner) {
+  env.setRunner(runner);
+}
+
+export * from "./reporter.ts";
+
+export * from "./runner.ts";
+
+export * from "./nodes.ts";
