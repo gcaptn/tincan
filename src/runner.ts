@@ -1,22 +1,13 @@
 import { DescribeNode, Hook, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
-import { getFullCaseName, Reporter, TestReporter } from "./reporter.ts";
+import {
+  findChildWithFirstCase,
+  findChildWithLastCase,
+  getFullCaseName,
+} from "./nodes_util.ts";
+import { DenoReporter, TestReporter } from "./reporters.ts";
 
-export type TestRunner = {
-  test: (node: ItNode, fn: TestFunction) => void | Promise<void>;
-  reporter: TestReporter;
-  setReporter: (reporter: TestReporter) => void;
-  runNode: (
-    node: RootNode | DescribeNode | ItNode,
-    beforeHooks?: Hook[],
-    beforeEachHooks?: Hook[],
-    afterEachHooks?: Hook[],
-    afterHooks?: Hook[],
-  ) => void | Promise<void>;
-};
-
-export class Runner implements TestRunner {
-  reporter: TestReporter = new Reporter();
+export class Runner {
+  reporter: TestReporter = new DenoReporter();
 
   setReporter(reporter: TestReporter) {
     this.reporter = reporter;

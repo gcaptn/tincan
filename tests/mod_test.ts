@@ -105,9 +105,3 @@ describe("test", () => {
 });
 
 run();
-
-expect(() => {
-  it("should support running run() more than once", noop);
-}).not.toThrow();
-
-expect(run).not.toThrow();

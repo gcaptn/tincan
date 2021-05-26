@@ -1,7 +1,7 @@
 /*
 
-Environment.setReporter / Environment.setRunner
-  sets the reporter and runner
+Environment.setReporter
+  sets the reporter
 
 Environment.run
   replaces the tree
@@ -15,30 +15,23 @@ Environment
 */
 
 import { Environment } from "../src/environment.ts";
-import { SilentReporter, SilentRunner } from "./test_util.ts";
+import { SilentReporter, silentTest } from "./test_util.ts";
 import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 
 function noop() {}
 
 function createTestEnvironment() {
   const env = new Environment();
-  env.setRunner(new SilentRunner());
+  env.runner.test = silentTest;
   env.setReporter(new SilentReporter());
   return env;
 }
 
-Deno.test("Environment.setReporter / Environment.setRunner sets the reporter and runner", () => {
+Deno.test("Environment.setReporter sets the reporter", () => {
   const env = new Environment();
-  const runner = new SilentRunner();
   const reporter = new SilentReporter();
-  env.setRunner(runner);
   env.setReporter(reporter);
-
-  expect(env.runner).toBe(runner);
-  expect(env.reporter).toBe(reporter);
-
-  // .run() will update the runner's reporter right before running
-  expect(env.runner.reporter).not.toBe(reporter);
+  expect(env.runner.reporter).toBe(reporter);
 });
 
 Deno.test("Environment.run replaces the tree", async () => {

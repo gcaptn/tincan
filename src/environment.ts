@@ -1,10 +1,9 @@
 import { Hook, TestFunction, Tree } from "./nodes.ts";
-import { Reporter, TestReporter } from "./reporter.ts";
-import { Runner, TestRunner } from "./runner.ts";
+import { TestReporter } from "./reporters.ts";
+import { Runner } from "./runner.ts";
 
 export class Environment {
-  runner: TestRunner = new Runner();
-  reporter: TestReporter = new Reporter();
+  runner = new Runner();
   currentTree = new Tree();
 
   // Because run() can be called multiple times and there can be more than one
@@ -21,12 +20,8 @@ export class Environment {
     }
   }
 
-  setRunner(runner: TestRunner) {
-    this.runner = runner;
-  }
-
   setReporter(reporter: TestReporter) {
-    this.reporter = reporter;
+    this.runner.setReporter(reporter);
   }
 
   async run() {
@@ -45,7 +40,6 @@ export class Environment {
       }),
     );
 
-    this.runner.setReporter(this.reporter);
     await this.runner.runNode(tree.root);
   }
 
