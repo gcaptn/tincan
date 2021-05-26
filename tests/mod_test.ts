@@ -7,7 +7,7 @@ import {
   it,
   run,
 } from "../src/mod.ts";
-import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
+import { expect, mock } from "https://deno.land/x/expect@v0.2.9/mod.ts";
 
 function noop() {}
 
