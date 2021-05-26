@@ -1,6 +1,6 @@
-import { TestReporter } from "./reporter.ts";
-import { Runner } from "./runner.ts";
-import { ItNode, TestFunction } from "./nodes.ts";
+import { TestReporter } from "../src/reporter.ts";
+import { Runner } from "../src/runner.ts";
+import { ItNode, TestFunction } from "../src/nodes.ts";
 
 export class SilentReporter implements TestReporter {
   reportStart() {}

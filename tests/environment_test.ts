@@ -14,7 +14,7 @@ Environment
 
 */
 
-import { Environment } from "./environment.ts";
+import { Environment } from "../src/environment.ts";
 import { SilentReporter, SilentRunner } from "./test_util.ts";
 import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
 

@@ -15,7 +15,7 @@ Runner.runNode
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { Hook, RootNode, Tree } from "./nodes.ts";
+import { Hook, RootNode, Tree } from "../src/nodes.ts";
 import { SilentReporter, SilentRunner } from "./test_util.ts";
 
 Deno.test("Runner.setReporter sets the runner's reporter", () => {

@@ -36,7 +36,7 @@ node.finish()
 */
 
 import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
-import { DescribeNode, ItNode, RootNode, Tree } from "./nodes.ts";
+import { DescribeNode, ItNode, RootNode, Tree } from "../src/nodes.ts";
 
 function noop() {}
 
