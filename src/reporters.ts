@@ -1,5 +1,5 @@
 import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
-import { gray, red } from "https://deno.land/std@0.95.0/fmt/colors.ts";
+import { gray, red } from "https://deno.land/std@0.97.0/fmt/colors.ts";
 
 export type TestReporter = {
   reportStart: (node: RootNode) => void;

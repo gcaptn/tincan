@@ -14,7 +14,7 @@ Runner.runNode
 
 */
 
-import { expect, mock } from "https://deno.land/x/expect@v0.2.6/mod.ts";
+import { expect, mock } from "https://deno.land/x/expect@v0.2.9/mod.ts";
 import { Runner } from "../src/runner.ts";
 import { Hook, RootNode, Tree } from "../src/nodes.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";

@@ -1,5 +1,5 @@
 import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
-import { bold, gray } from "https://deno.land/std@0.95.0/fmt/colors.ts";
+import { bold, gray } from "https://deno.land/std@0.97.0/fmt/colors.ts";
 
 type FindChildResult = ItNode | DescribeNode | undefined;
 

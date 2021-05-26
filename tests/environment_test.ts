@@ -16,7 +16,7 @@ Environment
 
 import { Environment } from "../src/environment.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
-import { expect } from "https://deno.land/x/expect@v0.2.6/mod.ts";
+import { expect } from "https://deno.land/x/expect@v0.2.9/mod.ts";
 
 function noop() {}
 
