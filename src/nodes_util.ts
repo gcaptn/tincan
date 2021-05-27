@@ -1,5 +1,5 @@
 import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
-import { bold, gray } from "https://deno.land/std@0.97.0/fmt/colors.ts";
+import { colors } from "./deps.ts";
 
 type FindChildResult = ItNode | DescribeNode | undefined;
 
@@ -43,8 +43,8 @@ export function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
 
 export function getFullCaseName(node: ItNode) {
   const hierarchy = getAncestry(node)
-    .map((node: DescribeNode | ItNode) => gray(node.headline));
-  hierarchy.push(bold(node.headline));
+    .map((node: DescribeNode | ItNode) => colors.gray(node.headline));
+  hierarchy.push(colors.bold(node.headline));
   return hierarchy.join(" > ");
 }
 

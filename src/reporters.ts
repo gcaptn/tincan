@@ -1,5 +1,5 @@
 import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
-import { gray, red } from "https://deno.land/std@0.97.0/fmt/colors.ts";
+import { colors } from "./deps.ts";
 
 export type TestReporter = {
   reportStart: (node: RootNode) => void;
@@ -21,7 +21,7 @@ function formatNode(
 ): string {
   let str = "";
   if (node instanceof ItNode) {
-    str += gray(
+    str += colors.gray(
       `${indent(depth - 1)}•${
         node.skipped ? " [SKIP]" : ""
       } ${node.headline}\n`,
@@ -45,7 +45,7 @@ export class DenoReporter implements TestReporter {
   }
 
   reportHookError(hook: Hook, error: unknown) {
-    log(`\n${red("ERROR")} in ${hook.type} hook:`);
+    log(`\n${colors.red("ERROR")} in ${hook.type} hook:`);
     if (hook.type === "internal") {
       log(
         "This is probably a bug. Please file an issue if you see this message.",
