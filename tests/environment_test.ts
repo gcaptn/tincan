@@ -1,12 +1,8 @@
 /*
 
-Environment.setReporter
-  sets the reporter
-
 Environment.run
   replaces the tree
   can run again when the previous run finishes
-  sets the runner's reporter to its reporter
 
 Environment
   refuses to add hooks within a test case
@@ -23,16 +19,9 @@ function noop() {}
 function createTestEnvironment() {
   const env = new Environment();
   env.runner.test = silentTest;
-  env.setReporter(new SilentReporter());
+  env.runner.reporter = new SilentReporter();
   return env;
 }
-
-Deno.test("Environment.setReporter sets the reporter", () => {
-  const env = new Environment();
-  const reporter = new SilentReporter();
-  env.setReporter(reporter);
-  expect(env.runner.reporter).toBe(reporter);
-});
 
 Deno.test("Environment.run replaces the tree", async () => {
   const env = createTestEnvironment();
@@ -51,17 +40,6 @@ Deno.test("Environment.run can run again when the previous run finishes", async 
     env.it("_", noop);
     env.run();
   }).not.toThrow();
-});
-
-Deno.test("Environment.run sets the runner's reporter to its reporter", async () => {
-  const env = createTestEnvironment();
-  const reporter = new SilentReporter();
-  env.setReporter(reporter);
-
-  env.it("_", noop);
-  await env.run();
-
-  expect(env.runner.reporter).toBe(reporter);
 });
 
 Deno.test("Environment refuses to add hooks within a test case", async () => {

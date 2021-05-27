@@ -1,5 +1,4 @@
 import { Hook, TestFunction, Tree } from "./nodes.ts";
-import { TestReporter } from "./reporters.ts";
 import { Runner } from "./runner.ts";
 
 export class Environment {
@@ -18,10 +17,6 @@ export class Environment {
         `${method} cannot be called while a test case is running!`,
       );
     }
-  }
-
-  setReporter(reporter: TestReporter) {
-    this.runner.setReporter(reporter);
   }
 
   async run() {
