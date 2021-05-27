@@ -1,17 +1,9 @@
 import { DescribeNode, Hook, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import {
-  findChildWithFirstCase,
-  findChildWithLastCase,
-  getFullCaseName,
-} from "./nodes_util.ts";
-import { DenoReporter, TestReporter } from "./reporters.ts";
+import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
+import { Reporter, TestReporter } from "./reporters.ts";
 
 export class Runner {
-  reporter: TestReporter = new DenoReporter();
-
-  setReporter(reporter: TestReporter) {
-    this.reporter = reporter;
-  }
+  reporter: TestReporter = new Reporter();
 
   async runNode(
     node: RootNode | DescribeNode | ItNode,
@@ -69,7 +61,6 @@ export class Runner {
         childAfterHooks.push(
           new Hook("internal", () => {
             node.finish();
-            this.reporter.reportEnd(node);
           }),
         );
       }
@@ -147,7 +138,6 @@ export class Runner {
       }
 
       node.finish();
-      this.reporter.reportCase(node);
 
       for (const hook of afterEachHooks) {
         await this.runHook(hook);
@@ -167,7 +157,7 @@ export class Runner {
 
   test(node: ItNode, fn: TestFunction) {
     Deno.test({
-      name: getFullCaseName(node),
+      name: this.reporter.getTestCaseName(node),
       fn,
       ignore: node.skipped,
     });

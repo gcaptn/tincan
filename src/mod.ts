@@ -1,9 +1,7 @@
 import { TestFunction } from "./nodes.ts";
-import * as tincan from "./tincan.ts";
+import { Environment } from "./environment.ts";
 
-export { tincan };
-
-const env = tincan.env;
+const env = new Environment();
 
 export function describe(headline: string, fn: () => void) {
   env.describe(headline, fn);

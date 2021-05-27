@@ -1,8 +1,5 @@
 /*
 
-Runner.setReporter
-  sets the runner's reporter
-
 Runner.runRoot
   calls .start() on the node
 
@@ -22,16 +19,9 @@ import { SilentReporter, silentTest } from "./test_util.ts";
 function makeTestRunner() {
   const runner = new Runner();
   runner.test = silentTest;
-  runner.setReporter(new SilentReporter());
+  runner.reporter = new SilentReporter();
   return runner;
 }
-
-Deno.test("Runner.setReporter sets the runner's reporter", () => {
-  const reporter = new SilentReporter();
-  const runner = makeTestRunner();
-  runner.setReporter(reporter);
-  expect(runner.reporter).toBe(reporter);
-});
 
 Deno.test("Runner.runRoot calls .start() on the node", () => {
   const root = new RootNode();

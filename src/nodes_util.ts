@@ -1,5 +1,4 @@
 import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
-import { colors } from "./deps.ts";
 
 type FindChildResult = ItNode | DescribeNode | undefined;
 
@@ -39,13 +38,6 @@ export function getAncestry(node: DescribeNode | ItNode): DescribeNode[] {
     lastAncestor = lastAncestor.parent;
   }
   return ancestors.reverse();
-}
-
-export function getFullCaseName(node: ItNode) {
-  const hierarchy = getAncestry(node)
-    .map((node: DescribeNode | ItNode) => colors.gray(node.headline));
-  hierarchy.push(colors.bold(node.headline));
-  return hierarchy.join(" > ");
 }
 
 export function getAllCases(node: RootNode | DescribeNode) {
