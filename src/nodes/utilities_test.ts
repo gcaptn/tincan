@@ -11,13 +11,14 @@ findChildWithLastCase
 
 */
 
-import { DescribeNode, ItNode, RootNode, Tree } from "../src/nodes.ts";
+import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
+import { Tree } from "./tree.ts";
+import { expect } from "../deps.ts";
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
   getAncestry,
-} from "../src/nodes_util.ts";
-import { expect } from "./deps.ts";
+} from "./utilities.ts";
 
 function noop() {}
 

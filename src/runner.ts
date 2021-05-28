@@ -1,5 +1,12 @@
-import { DescribeNode, Hook, ItNode, RootNode, TestFunction } from "./nodes.ts";
-import { findChildWithFirstCase, findChildWithLastCase } from "./nodes_util.ts";
+import {
+  DescribeNode,
+  findChildWithFirstCase,
+  findChildWithLastCase,
+  Hook,
+  ItNode,
+  RootNode,
+  TestFunction,
+} from "./nodes/mod.ts";
 import { Reporter, TestReporter } from "./reporters.ts";
 
 export class Runner {

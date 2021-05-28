@@ -16,27 +16,11 @@ describe() or it()
 
 calling a hook creator adds a hook to the current parent
 
-node.skip()
-  skips all of its children
-
-node.focus()
-  skips non-focused siblings
-
-node.fail()
-  sets the status to fail
-  on an ItNode sets the error to the given value
-  calls fail on the parent
-
-node.start()
-  sets the start time
-
-node.finish()
-  sets the time taken
-
 */
 
-import { expect, mock } from "./deps.ts";
-import { DescribeNode, ItNode, RootNode, Tree } from "../src/nodes.ts";
+import { Tree } from "./tree.ts";
+import { ItNode } from "./nodes.ts";
+import { expect, mock } from "../deps.ts";
 
 function noop() {}
 
@@ -176,89 +160,4 @@ Deno.test("calling a hook creator adds a hook to the current parent", () => {
   expect(parentNode.beforeEach.length).toBe(1);
   expect(parentNode.afterEach.length).toBe(1);
   expect(parentNode.afterAll.length).toBe(1);
-});
-
-Deno.test("node.skip() skips all of its children", () => {
-  const tree = new Tree();
-  const unskippedNode = tree.addDescribeNode("_", noopDescribe(tree));
-  const describeNode = tree.addDescribeNode("_", () => {
-    tree.addItNode("_", noop);
-    tree.addDescribeNode("_", () => {
-      tree.addItNode("_", noop);
-    });
-  });
-
-  describeNode.skip();
-
-  expect(unskippedNode.skipped).toBe(false);
-
-  describeNode.children.forEach((child) => {
-    expect(child.skipped).toBe(true);
-    if (child instanceof DescribeNode && child.children.length > 0) {
-      expect(child.children[0].skipped).toBe(true);
-    }
-  });
-});
-
-Deno.test("node.focus() skips non-focused siblings", () => {
-  const tree = new Tree();
-  const node = tree.addItNode("_", noop);
-  const sibling = tree.addItNode("_", noop);
-  node.focus();
-  expect(sibling.skipped).toBe(true);
-});
-
-Deno.test("node.fail() sets the status to FAIL", () => {
-  const rootNode = new RootNode();
-  const describeNode = new DescribeNode("_", rootNode);
-  rootNode.fail();
-  describeNode.fail();
-  expect(rootNode.result).toBe("FAIL");
-  expect(describeNode.result).toBe("FAIL");
-});
-
-Deno.test("node.fail() on an ItNode sets the error to the given value", () => {
-  const itNode = new ItNode("_", noop, new RootNode());
-  const value = new Error();
-  itNode.fail(value);
-  expect(itNode.error).toBe(value);
-});
-
-Deno.test("node.fail() calls .fail() on the parent", () => {
-  const parent = new RootNode();
-  const itNode = new ItNode("_", noop, parent);
-  const describeNode = new DescribeNode("_", parent);
-  parent.fail = mock.fn();
-  itNode.fail();
-  describeNode.fail();
-  expect(parent.fail).toHaveBeenCalledTimes(2);
-});
-
-Deno.test("node.start() on the root throws if there are no cases", () => {
-  const rootNode = new RootNode();
-  expect(rootNode.start).toThrow();
-
-  rootNode.children.push(new ItNode("_", noop, rootNode));
-  expect(() => {
-    rootNode.start();
-  }).not.toThrow();
-});
-
-Deno.test("node.start() sets the start time", () => {
-  const rootNode = new RootNode();
-  const itNode = new ItNode("_", noop, rootNode);
-  rootNode.children.push(itNode);
-  rootNode.start();
-  itNode.start();
-  expect(rootNode.startTime).not.toBe(0);
-  expect(rootNode.startTime).not.toBe(0);
-});
-
-Deno.test("node.finish() sets the time taken", () => {
-  const rootNode = new RootNode();
-  const itNode = new ItNode("_", noop, rootNode);
-  rootNode.finish();
-  itNode.finish();
-  expect(rootNode.timeTaken).not.toBe(0);
-  expect(rootNode.timeTaken).not.toBe(0);
 });

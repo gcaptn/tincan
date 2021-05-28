@@ -1,4 +1,4 @@
-import { TestFunction } from "./nodes.ts";
+import { TestFunction } from "./nodes/mod.ts";
 import { Environment } from "./environment.ts";
 
 const env = new Environment();

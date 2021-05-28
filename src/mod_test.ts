@@ -8,7 +8,7 @@ import {
   it,
   mock,
   run,
-} from "../src/mod.ts";
+} from "./mod.ts";
 
 function noop() {}
 

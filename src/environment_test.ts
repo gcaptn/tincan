@@ -10,7 +10,7 @@ Environment
 
 */
 
-import { Environment } from "../src/environment.ts";
+import { Environment } from "./environment.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
 import { expect } from "./deps.ts";
 

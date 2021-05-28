@@ -1,5 +1,5 @@
-import { TestReporter } from "../src/reporters.ts";
-import { ItNode, TestFunction } from "../src/nodes.ts";
+import { TestReporter } from "./reporters.ts";
+import { ItNode, TestFunction } from "./nodes/mod.ts";
 
 export class SilentReporter implements TestReporter {
   getTestCaseName = () => "";

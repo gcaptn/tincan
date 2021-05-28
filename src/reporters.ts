@@ -1,6 +1,11 @@
-import { DescribeNode, Hook, ItNode, RootNode } from "./nodes.ts";
-import { getAncestry } from "./nodes_util.ts";
 import { colors } from "./deps.ts";
+import {
+  DescribeNode,
+  getAncestry,
+  Hook,
+  ItNode,
+  RootNode,
+} from "./nodes/mod.ts";
 
 export type TestReporter = {
   reportStart: (node: RootNode) => void;

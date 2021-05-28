@@ -12,8 +12,8 @@ Runner.runNode
 */
 
 import { expect, mock } from "./deps.ts";
-import { Runner } from "../src/runner.ts";
-import { Hook, RootNode, Tree } from "../src/nodes.ts";
+import { Runner } from "./runner.ts";
+import { Hook, RootNode, Tree } from "./nodes/mod.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
 
 function makeTestRunner() {
