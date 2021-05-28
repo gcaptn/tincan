@@ -9,23 +9,28 @@ findChildWithFirstCase
 findChildWithLastCase
   finds the child that will run the last case
 
+getAllCases
+  gets every ItNode descendant in order of execution
+
 */
 
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
+import { RootNode } from "./nodes.ts";
 import { Tree } from "./tree.ts";
+import { addDescribeNode, addItNode } from "../test_util.ts";
 import { expect } from "../deps.ts";
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
+  getAllCases,
   getAncestry,
 } from "./utilities.ts";
 
 function noop() {}
 
 Deno.test("getAncestry returns a node's describe ancestors starting from the highest", () => {
-  const firstNode = new DescribeNode("_", new RootNode());
-  const secondNode = new DescribeNode("_", firstNode);
-  expect(getAncestry(new ItNode("_", noop, secondNode))).toEqual([
+  const firstNode = addDescribeNode(new RootNode());
+  const secondNode = addDescribeNode(firstNode);
+  expect(getAncestry(addItNode(secondNode))).toEqual([
     firstNode,
     secondNode,
   ]);
@@ -58,4 +63,19 @@ Deno.test("findChildWithFirstCase finds the child that will run the first case",
 Deno.test("findChildWithLastCase finds the child that will run the first case", () => {
   const { tree, last } = findChildEnv();
   expect(findChildWithLastCase(tree.root)).toBe(last);
+});
+
+Deno.test("getAllCases gets every ItNode descendant in order of execution", () => {
+  const root = new RootNode();
+
+  const firstIt = addItNode(root);
+  const firstDescribe = addDescribeNode(root);
+  const secondIt = addItNode(firstDescribe);
+  const secondDescribe = addDescribeNode(firstDescribe);
+  // thirdIt, although nested will run first because
+  // its parent describe node comes before foruthIt
+  const thirdIt = addItNode(secondDescribe);
+  const fourthIt = addItNode(firstDescribe);
+
+  expect(getAllCases(root)).toEqual([firstIt, secondIt, thirdIt, fourthIt]);
 });

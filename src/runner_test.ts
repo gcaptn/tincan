@@ -5,6 +5,8 @@ Runner.runRoot
 
 Runner.runIt
   's function calls the node's function and hooks
+  's function catches hook errors
+  's function still throws when the test function fails
 
 Runner.runNode
   runs hooks in the correct order
@@ -13,7 +15,7 @@ Runner.runNode
 
 import { expect, mock } from "./deps.ts";
 import { Runner } from "./runner.ts";
-import { Hook, RootNode, Tree } from "./nodes/mod.ts";
+import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes/mod.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
 
 function makeTestRunner() {
@@ -30,10 +32,14 @@ Deno.test("Runner.runRoot calls .start() on the node", () => {
   expect(root.start).toHaveBeenCalled();
 });
 
+function makeItNode(fn: TestFunction) {
+  return new ItNode("_", fn, new RootNode());
+}
+
 Deno.test("Runner.runIt's function calls the node's function and hooks", async () => {
   const order: string[] = [];
 
-  const it = new Tree().addItNode("_", () => {
+  const it = makeItNode(() => {
     order.push("3");
   });
 
@@ -66,10 +72,30 @@ Deno.test("Runner.runIt's function calls the node's function and hooks", async (
   expect(order).toEqual(["1", "2", "3", "4", "5"]);
 });
 
+Deno.test("Runner.runIt's function catches hook errors", () => {
+  const hook = new Hook("internal", () => {
+    throw new Error("case error");
+  });
+  return makeTestRunner().runIt(makeItNode(() => {}), [], [], [], [hook]);
+});
+
+Deno.test("Runner.runIt's function still throws when the case fails", async () => {
+  const toThrow = new Error("case error");
+  const it = makeItNode(() => {
+    throw toThrow;
+  });
+
+  try {
+    await makeTestRunner().runIt(it, [], [], [], []);
+    throw new Error("above should throw");
+  } catch (err) {
+    expect(err).toBe(toThrow);
+  }
+});
+
 Deno.test("Runner.runNode runs hooks in the correct order", async () => {
   const order: string[] = [];
   const tree = new Tree();
-  const runner = makeTestRunner();
 
   tree.beforeAll(() => {
     order.push("1 - beforeAll");
@@ -105,7 +131,7 @@ Deno.test("Runner.runNode runs hooks in the correct order", async () => {
     });
   });
 
-  await runner.runNode(tree.root);
+  await makeTestRunner().runNode(tree.root);
 
   expect(order).toEqual([
     "1 - beforeAll",

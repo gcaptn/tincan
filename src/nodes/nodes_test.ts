@@ -4,10 +4,13 @@ node.skip()
   skips all of its children
 
 node.focus()
-  skips non-focused siblings
+  calls updateFocusedChildren on the parent
+
+node.updateFocusedChildren()
+  skips non-focused children
 
 node.fail()
-  sets the status to fail
+  sets the result to FAIL
   on an ItNode sets the error to the given value
   calls fail on the parent
 
@@ -20,21 +23,8 @@ node.finish()
 */
 
 import { expect, mock } from "../deps.ts";
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
-
-function noop() {}
-
-function addItNode(parent: DescribeNode | RootNode) {
-  const node = new ItNode("_", noop, parent);
-  parent.children.push(node);
-  return node;
-}
-
-function addDescribeNode(parent: DescribeNode | RootNode) {
-  const node = new DescribeNode("_", parent);
-  parent.children.push(node);
-  return node;
-}
+import { DescribeNode, RootNode } from "./nodes.ts";
+import { addDescribeNode, addItNode } from "../test_util.ts";
 
 Deno.test("node.skip() skips all of its children", () => {
   const root = new RootNode();
@@ -54,15 +44,28 @@ Deno.test("node.skip() skips all of its children", () => {
   expect(nestedChildIt.skipped).toBe(true);
 });
 
-Deno.test("node.focus() skips non-focused siblings", () => {
+Deno.test("node.focus() calls updateFocusedChildren on the parent", () => {
   const root = new RootNode();
+  root.updateFocusedChildren = mock.fn();
   const node = addItNode(root);
-  const sibling = addItNode(root);
   node.focus();
-  expect(sibling.skipped).toBe(true);
+  expect(root.updateFocusedChildren).toHaveBeenCalled();
 });
 
-Deno.test("node.fail() sets the status to FAIL", () => {
+Deno.test("node.updateFocusedChildren() skips non-focused children", () => {
+  function updateFocusedChildrenTest(node: DescribeNode | RootNode) {
+    const child = addItNode(node);
+    const notFocusedChild = addItNode(node);
+    child.focused = true;
+    node.updateFocusedChildren();
+    expect(notFocusedChild.skipped).toBe(true);
+  }
+
+  updateFocusedChildrenTest(new RootNode());
+  updateFocusedChildrenTest(addDescribeNode(new RootNode()));
+});
+
+Deno.test("node.fail() sets the result to FAIL", () => {
   const root = new RootNode();
   root.fail();
   expect(root.result).toBe("FAIL");
