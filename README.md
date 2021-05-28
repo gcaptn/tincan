@@ -46,14 +46,14 @@ describe("Array", () => {
     array = [];
   });
 
-  describe("#indexOf", () => {
-    it.only("should return -1 when the item isn't found", () => {
-      expect(array.indexOf(0)).toBe(-1);
-    });
-
-    it("should return the index of the item", () => {
+  describe("#indexOf()", () => {
+    it("should return the first index of an item", () => {
       array.push(0);
       expect(array.indexOf(0)).toBe(0);
+    });
+
+    it.only("should return -1 when the item isn't found", () => {
+      expect(array.indexOf(0)).toBe(-1);
     });
   });
 });

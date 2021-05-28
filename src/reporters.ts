@@ -20,6 +20,10 @@ function indent(depth: number) {
   return "  ".repeat(depth);
 }
 
+function skipTag(isSkipped: boolean) {
+  return isSkipped ? colors.yellow(" [SKIP]") : "";
+}
+
 function formatNode(
   node: ItNode | DescribeNode | RootNode,
   depth = 1,
@@ -27,12 +31,10 @@ function formatNode(
   let str = "";
   if (node instanceof ItNode) {
     str += colors.gray(
-      `${indent(depth - 1)}•${
-        node.skipped ? " [SKIP]" : ""
-      } ${node.headline}\n`,
+      `${indent(depth - 1)}• ${node.headline}${skipTag(node.skipped)}\n`,
     );
   } else if (node instanceof DescribeNode) {
-    str += `${indent(depth)}${node.skipped ? "[SKIP] " : ""}${node.headline}\n`;
+    str += `${indent(depth)}${node.headline}${skipTag(node.skipped)}\n`;
     node.children.forEach((child) => str += formatNode(child, depth + 1));
   } else {
     str = "\n";
@@ -46,7 +48,7 @@ export class Reporter implements TestReporter {
     const hierarchy = getAncestry(node)
       .map((node: DescribeNode | ItNode) => colors.gray(node.headline));
     hierarchy.push(colors.bold(node.headline));
-    return hierarchy.join(" > ");
+    return "\u0008".repeat(5) + hierarchy.join(" > ");
   }
 
   reportStart(node: RootNode) {
