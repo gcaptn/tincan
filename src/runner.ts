@@ -7,7 +7,7 @@ import {
   RootNode,
   TestFunction,
 } from "./nodes/mod.ts";
-import { Reporter, TestReporter } from "./reporters.ts";
+import { Reporter, TestReporter } from "./reporter.ts";
 
 export class Runner {
   reporter: TestReporter = new Reporter();

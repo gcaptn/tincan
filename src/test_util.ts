@@ -1,4 +1,4 @@
-import { TestReporter } from "./reporters.ts";
+import { TestReporter } from "./reporter.ts";
 import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes/mod.ts";
 
 export class SilentReporter implements TestReporter {

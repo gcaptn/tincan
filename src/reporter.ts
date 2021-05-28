@@ -48,7 +48,7 @@ export class Reporter implements TestReporter {
     const hierarchy = getAncestry(node)
       .map((node: DescribeNode | ItNode) => colors.gray(node.headline));
     hierarchy.push(colors.bold(node.headline));
-    return "\b".repeat(5) + hierarchy.join(" > ");
+    return hierarchy.join(" > ");
   }
 
   reportStart(node: RootNode) {
