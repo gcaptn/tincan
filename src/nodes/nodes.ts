@@ -63,9 +63,6 @@ export class RootNode implements ParentNode {
   afterAll: Hook[] = [];
   beforeEach: Hook[] = [];
   afterEach: Hook[] = [];
-  result: TestResult = "PASS";
-  timeTaken = 0;
-  startTime = 0;
   hasFocused = false;
 
   updateFocusedChildren() {
@@ -76,26 +73,12 @@ export class RootNode implements ParentNode {
       }
     });
   }
-
-  start() {
-    assertHasCase(this, "Tests");
-    this.startTime = Date.now();
-  }
-
-  fail() {
-    this.result = "FAIL";
-  }
-
-  finish() {
-    this.timeTaken = Date.now() - this.startTime;
-  }
 }
 
 export class DescribeNode implements ParentNode, ChildNode {
   children: (DescribeNode | ItNode)[] = [];
   parent: RootNode | DescribeNode;
   headline: string;
-  result: TestResult = "PASS";
   beforeAll: Hook[] = [];
   afterAll: Hook[] = [];
   beforeEach: Hook[] = [];
@@ -128,21 +111,12 @@ export class DescribeNode implements ParentNode, ChildNode {
       }
     });
   }
-
-  fail() {
-    this.result = "FAIL";
-    this.parent.fail();
-  }
 }
 
 export class ItNode implements ChildNode {
   parent: DescribeNode | RootNode;
   headline: string;
   fn: TestFunction;
-  result: TestResult = "PASS";
-  error: unknown;
-  timeTaken = 0;
-  startTime = 0;
   skipped = false;
   focused = false;
 
@@ -164,19 +138,5 @@ export class ItNode implements ChildNode {
   focus() {
     this.focused = true;
     this.parent.updateFocusedChildren();
-  }
-
-  start() {
-    this.startTime = Date.now();
-  }
-
-  fail(error?: unknown) {
-    this.result = "FAIL";
-    this.error = error;
-    this.parent.fail();
-  }
-
-  finish() {
-    this.timeTaken = Date.now() - this.startTime;
   }
 }

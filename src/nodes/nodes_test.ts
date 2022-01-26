@@ -9,17 +9,6 @@ node.focus()
 node.updateFocusedChildren()
   skips non-focused children
 
-node.fail()
-  sets the result to FAIL
-  on an ItNode sets the error to the given value
-  calls fail on the parent
-
-node.start()
-  sets the start time
-
-node.finish()
-  sets the time taken
-
 */
 
 import { expect, mock } from "../deps.ts";
@@ -63,65 +52,4 @@ Deno.test("node.updateFocusedChildren() skips non-focused children", () => {
 
   updateFocusedChildrenTest(new RootNode());
   updateFocusedChildrenTest(addDescribeNode(new RootNode()));
-});
-
-Deno.test("node.fail() sets the result to FAIL", () => {
-  const root = new RootNode();
-  root.fail();
-  expect(root.result).toBe("FAIL");
-
-  const describeNode = addDescribeNode(root);
-  describeNode.fail();
-  expect(describeNode.result).toBe("FAIL");
-});
-
-Deno.test("node.fail() on an ItNode sets the error to the given value", () => {
-  const itNode = addItNode(new RootNode());
-  const value = new Error();
-  itNode.fail(value);
-  expect(itNode.error).toBe(value);
-});
-
-Deno.test("node.fail() calls .fail() on the parent", () => {
-  const parent = new RootNode();
-  const itNode = addItNode(parent);
-  const describeNode = addDescribeNode(parent);
-
-  parent.fail = mock.fn();
-  itNode.fail();
-  describeNode.fail();
-
-  expect(parent.fail).toHaveBeenCalledTimes(2);
-});
-
-Deno.test("node.start() on the root throws if there are no cases", () => {
-  const rootNode = new RootNode();
-  expect(rootNode.start).toThrow();
-
-  addItNode(rootNode);
-  expect(() => {
-    rootNode.start();
-  }).not.toThrow();
-});
-
-Deno.test("node.start() sets the start time", () => {
-  const rootNode = new RootNode();
-  const itNode = addItNode(rootNode);
-
-  rootNode.start();
-  expect(rootNode.startTime).not.toBe(0);
-
-  itNode.start();
-  expect(itNode.startTime).not.toBe(0);
-});
-
-Deno.test("node.finish() sets the time taken", () => {
-  const rootNode = new RootNode();
-  const itNode = addItNode(rootNode);
-
-  rootNode.finish();
-  expect(rootNode.timeTaken).not.toBe(0);
-
-  itNode.finish();
-  expect(itNode.timeTaken).not.toBe(0);
 });
