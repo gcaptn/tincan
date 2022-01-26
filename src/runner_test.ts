@@ -12,14 +12,10 @@ recursiveRun()
 import { testStepFunction } from "./test_util.ts";
 import { expect } from "./deps.ts";
 import { recursiveRun, TestStepFunction } from "./runner.ts";
-import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes/mod.ts";
+import { Hook, Tree } from "./nodes/mod.ts";
 
 // Deno.test is assignable to the type TestStepFunction
 ((_a: TestStepFunction) => _a)(Deno.test);
-
-function makeItNode(fn: TestFunction) {
-  return new ItNode("_", fn, new RootNode());
-}
 
 Deno.test("recursiveRun catches hook errors", () => {
   const hook = new Hook("internal", () => {
