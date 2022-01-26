@@ -39,7 +39,7 @@ export async function recursiveRun(
 
   for (const child of node.children) {
     await stepFunction({
-      name: child.headline,
+      name: colors.gray(child.headline),
       ignore: child.skipped,
       fn: async (t) => {
         if (child instanceof DescribeNode) {
