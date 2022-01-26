@@ -1,172 +1,87 @@
-import {
-  DescribeNode,
-  findChildWithFirstCase,
-  findChildWithLastCase,
-  Hook,
-  ItNode,
-  RootNode,
-  TestFunction,
-} from "./nodes/mod.ts";
-import { Reporter, TestReporter } from "./reporter.ts";
+import { DescribeNode, Hook, RootNode } from "./nodes/mod.ts";
+import { colors } from "./deps.ts";
 
-export class Runner {
-  reporter: TestReporter = new Reporter();
+export type TestStepFunction = (definition: {
+  fn: ((t: { step: TestStepFunction }) => Promise<void> | void);
+  name: string;
+  ignore?: boolean;
+  // sanitizeOps?: boolean;
+  // sanitizeResources?: boolean;
+  // sanitizeExit?: boolean;
+}) => // Deno's step function returns a Promise<boolean> when
+// the only parameter is a TestStepDefinition
+unknown;
 
-  async runNode(
-    node: RootNode | DescribeNode | ItNode,
-    beforeHooks: Hook[] = [],
-    beforeEachHooks: Hook[] = [],
-    afterEachHooks: Hook[] = [],
-    afterHooks: Hook[] = [],
-  ) {
-    if (node instanceof RootNode) {
-      await this.runRoot(node);
-    } else if (node instanceof DescribeNode) {
-      await this.runDescribe(
-        node,
-        beforeHooks,
-        beforeEachHooks,
-        afterEachHooks,
-        afterHooks,
-      );
-    } else {
-      await this.runIt(
-        node,
-        beforeHooks,
-        beforeEachHooks,
-        afterEachHooks,
-        afterHooks,
+export async function runHook(hook: Hook) {
+  try {
+    await hook.fn();
+  } catch (e) {
+    console.log(`\n${colors.red("ERROR")} in ${hook.type} hook:`);
+    if (hook.type === "internal") {
+      console.log(
+        "This is probably a bug. Please file an issue if you see this message.",
       );
     }
+    console.error(e);
+  }
+}
+
+export async function recursiveRun(
+  node: DescribeNode | RootNode,
+  inheritedBeforeEachHooks: Hook[],
+  inheritedAfterEachHooks: Hook[],
+  stepFunction: TestStepFunction,
+) {
+  for (const hook of node.beforeAll) {
+    console.log("beforeall", hook.type, node.constructor.name);
+    await runHook(hook);
   }
 
-  async runHook(hook: Hook) {
-    try {
-      await hook.fn();
-    } catch (error) {
-      this.reporter.reportHookError(hook, error);
-    }
-  }
+  for (const child of node.children) {
+    await stepFunction({
+      name: child.headline,
+      ignore: child.skipped,
+      fn: async (t) => {
+        if (child instanceof DescribeNode) {
+          await recursiveRun(
+            child,
+            [...inheritedBeforeEachHooks, ...node.beforeEach],
+            [...node.afterEach, ...inheritedAfterEachHooks],
+            t.step,
+          );
+        } else {
+          for (const hook of inheritedBeforeEachHooks) {
+            await runHook(hook);
+          }
 
-  async runRoot(node: RootNode) {
-    node.start();
-    this.reporter.reportStart(node);
+          for (const hook of node.beforeEach) {
+            await runHook(hook);
+          }
 
-    const childWithFirstCase = findChildWithFirstCase(node);
-    const childWithLastCase = findChildWithLastCase(node);
+          let didThrow = false;
+          let err: unknown;
+          try {
+            await child.fn();
+          } catch (e) {
+            didThrow = true;
+            err = e;
+          }
 
-    for (const child of node.children) {
-      let childBeforeHooks: Hook[] = [];
-      let childAfterHooks: Hook[] = [];
+          for (const hook of node.afterEach) {
+            await runHook(hook);
+          }
 
-      if (child === childWithFirstCase) {
-        childBeforeHooks = [...node.beforeAll];
-      }
+          for (const hook of inheritedAfterEachHooks) {
+            await runHook(hook);
+          }
 
-      if (child === childWithLastCase) {
-        childAfterHooks = [...childAfterHooks, ...node.afterAll];
-        childAfterHooks.push(
-          new Hook("internal", () => {
-            node.finish();
-          }),
-        );
-      }
-
-      await this.runNode(
-        child,
-        childBeforeHooks,
-        [...node.beforeEach],
-        [...node.afterEach],
-        childAfterHooks,
-      );
-    }
-  }
-
-  async runDescribe(
-    node: DescribeNode,
-    beforeHooks: Hook[],
-    beforeEachHooks: Hook[],
-    afterEachHooks: Hook[],
-    afterHooks: Hook[],
-  ) {
-    const childWithFirstCase = findChildWithFirstCase(node);
-    const childWithLastCase = findChildWithLastCase(node);
-
-    for (const child of node.children) {
-      let childBeforeHooks: Hook[] = [];
-      let childAfterHooks: Hook[] = [];
-
-      if (child === childWithFirstCase) {
-        childBeforeHooks = [...beforeHooks, ...node.beforeAll];
-      }
-
-      if (child === childWithLastCase) {
-        childAfterHooks = [...node.afterAll, ...afterHooks];
-      }
-
-      await this.runNode(
-        child,
-        childBeforeHooks,
-        [...beforeEachHooks, ...node.beforeEach],
-        [...node.afterEach, ...afterEachHooks],
-        childAfterHooks,
-      );
-    }
-  }
-
-  async runIt(
-    node: ItNode,
-    beforeHooks: Hook[],
-    beforeEachHooks: Hook[],
-    afterEachHooks: Hook[],
-    afterHooks: Hook[],
-  ) {
-    // Deno.test() *registers* tests and runs them separately. Hooks
-    // have to be passsed down and ran in one function with the test
-
-    const wrappedFn = async () => {
-      for (const hook of beforeHooks) {
-        await this.runHook(hook);
-      }
-
-      for (const hook of beforeEachHooks) {
-        await this.runHook(hook);
-      }
-
-      node.start();
-
-      let didThrow = false;
-
-      try {
-        await node.fn();
-      } catch (error) {
-        node.fail(error);
-        didThrow = true;
-      }
-
-      node.finish();
-
-      for (const hook of afterEachHooks) {
-        await this.runHook(hook);
-      }
-
-      for (const hook of afterHooks) {
-        await this.runHook(hook);
-      }
-
-      if (didThrow) {
-        throw node.error;
-      }
-    };
-
-    await this.test(node, wrappedFn);
-  }
-
-  test(node: ItNode, fn: TestFunction) {
-    Deno.test({
-      name: this.reporter.getTestCaseName(node),
-      fn,
-      ignore: node.skipped,
+          if (didThrow) throw err;
+        }
+      },
     });
+  }
+
+  for (const hook of node.afterAll) {
+    await runHook(hook);
   }
 }

@@ -1,9 +1,13 @@
 import { Hook, TestFunction, Tree } from "./nodes/mod.ts";
-import { Runner } from "./runner.ts";
+import { recursiveRun, TestStepFunction } from "./runner.ts";
 
 export class Environment {
-  runner = new Runner();
   currentTree = new Tree();
+  private testStepFunction: TestStepFunction;
+
+  constructor(testStepFunction: TestStepFunction = Deno.test) {
+    this.testStepFunction = testStepFunction;
+  }
 
   // Because run() can be called multiple times and there can be more than one
   // test tree, calling hooks/describe/it inside a test case will register it in
@@ -35,7 +39,7 @@ export class Environment {
       }),
     );
 
-    await this.runner.runNode(tree.root);
+    await recursiveRun(tree.root, [], [], this.testStepFunction);
   }
 
   describe(headline: string, fn: () => void) {

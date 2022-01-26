@@ -1,11 +1,5 @@
-import { TestReporter } from "./reporter.ts";
 import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes/mod.ts";
-
-export class SilentReporter implements TestReporter {
-  getTestCaseName = () => "";
-  reportStart() {}
-  reportHookError() {}
-}
+import { TestStepFunction } from "./runner.ts";
 
 export async function silentTest(node: ItNode, wrappedFn: TestFunction) {
   if (!node.skipped) {
@@ -24,3 +18,8 @@ export function addDescribeNode(parent: DescribeNode | RootNode) {
   parent.children.push(node);
   return node;
 }
+
+export const testStepFunction: TestStepFunction = async (obj) => {
+  if (obj.ignore) return;
+  await obj.fn({ step: testStepFunction });
+};

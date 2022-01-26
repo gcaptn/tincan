@@ -11,15 +11,13 @@ Environment
 */
 
 import { Environment } from "./environment.ts";
-import { SilentReporter, silentTest } from "./test_util.ts";
+import { testStepFunction } from "./test_util.ts";
 import { expect } from "./deps.ts";
 
 function noop() {}
 
 function createTestEnvironment() {
-  const env = new Environment();
-  env.runner.test = silentTest;
-  env.runner.reporter = new SilentReporter();
+  const env = new Environment(testStepFunction);
   return env;
 }
 

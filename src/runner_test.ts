@@ -1,99 +1,53 @@
 /*
 
-Runner.runRoot
-  calls .start() on the node
+Deno.test is assignable to the type TestStepFunction
 
-Runner.runIt
-  's function calls the node's function and hooks
-  's function catches hook errors
-  's function still throws when the test function fails
-
-Runner.runNode
+recursiveRun()
+  catches hook errors
+  throws when the case fails
   runs hooks in the correct order
 
 */
 
-import { expect, mock } from "./deps.ts";
-import { Runner } from "./runner.ts";
+import { testStepFunction } from "./test_util.ts";
+import { expect } from "./deps.ts";
+import { recursiveRun, TestStepFunction } from "./runner.ts";
 import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes/mod.ts";
-import { SilentReporter, silentTest } from "./test_util.ts";
 
-function makeTestRunner() {
-  const runner = new Runner();
-  runner.test = silentTest;
-  runner.reporter = new SilentReporter();
-  return runner;
-}
-
-Deno.test("Runner.runRoot calls .start() on the node", () => {
-  const root = new RootNode();
-  root.start = mock.fn();
-  makeTestRunner().runRoot(root);
-  expect(root.start).toHaveBeenCalled();
-});
+// Deno.test is assignable to the type TestStepFunction
+((_a: TestStepFunction) => _a)(Deno.test);
 
 function makeItNode(fn: TestFunction) {
   return new ItNode("_", fn, new RootNode());
 }
 
-Deno.test("Runner.runIt's function calls the node's function and hooks", async () => {
-  const order: string[] = [];
-
-  const it = makeItNode(() => {
-    order.push("3");
-  });
-
-  const runner = makeTestRunner();
-
-  await runner.runIt(
-    it,
-    [
-      new Hook("beforeAll", () => {
-        order.push("1");
-      }),
-    ],
-    [
-      new Hook("beforeEach", () => {
-        order.push("2");
-      }),
-    ],
-    [
-      new Hook("afterEach", () => {
-        order.push("4");
-      }),
-    ],
-    [
-      new Hook("afterAll", () => {
-        order.push("5");
-      }),
-    ],
-  );
-
-  expect(order).toEqual(["1", "2", "3", "4", "5"]);
-});
-
-Deno.test("Runner.runIt's function catches hook errors", () => {
+Deno.test("recursiveRun catches hook errors", () => {
   const hook = new Hook("internal", () => {
     throw new Error("case error");
   });
-  return makeTestRunner().runIt(makeItNode(() => {}), [], [], [], [hook]);
+
+  const tree = new Tree();
+  tree.it("_", () => {});
+
+  return recursiveRun(tree.root, [], [hook], testStepFunction);
 });
 
-Deno.test("Runner.runIt's function still throws when the case fails", async () => {
+Deno.test("recursiveRun throws when the case fails", async () => {
   const toThrow = new Error("case error");
-  const it = makeItNode(() => {
+  const tree = new Tree();
+  tree.it("_", () => {
     throw toThrow;
   });
 
   try {
-    await makeTestRunner().runIt(it, [], [], [], []);
+    await recursiveRun(tree.root, [], [], testStepFunction);
     throw new Error("above should throw");
   } catch (err) {
     expect(err).toBe(toThrow);
   }
 });
 
-Deno.test("Runner.runNode runs hooks in the correct order", async () => {
+Deno.test("recursiveRun runs hooks in the correct order", async () => {
   const order: string[] = [];
   const tree = new Tree();
 
@@ -131,7 +85,7 @@ Deno.test("Runner.runNode runs hooks in the correct order", async () => {
     });
   });
 
-  await makeTestRunner().runNode(tree.root);
+  await recursiveRun(tree.root, [], [], testStepFunction);
 
   expect(order).toEqual([
     "1 - beforeAll",
