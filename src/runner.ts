@@ -33,7 +33,6 @@ export async function recursiveRun(
   stepFunction: TestStepFunction,
 ) {
   for (const hook of node.beforeAll) {
-    console.log("beforeall", hook.type, node.constructor.name);
     await runHook(hook);
   }
 
