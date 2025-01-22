@@ -22,7 +22,7 @@ jobs:
       - name: Setup deno
         uses: denoland/setup-deno@main
         with:
-          deno-version: v1.x
+          deno-version: v2.x
 
       - name: Test
         run: |
@@ -39,10 +39,10 @@ jobs:
       - name: Setup deno
         uses: denoland/setup-deno@main
         with:
-          deno-version: v1.x
+          deno-version: v2.x
 
       - name: Lint
         run: |
           deno --version
-          deno lint --unstable
+          deno lint
           deno fmt --ignore=README.md --check
