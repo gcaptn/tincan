@@ -82,7 +82,7 @@ import { expect as expect_, mock as mock_ } from "./deps.ts";
 /**
  * Matchers re-exported from allain/expect. These are not required to do
  * assertions in tincan, so you can use the standard library (std/testing) or
- * bring your own matchers. See https://deno.land/x/expect@v0.2.9/ for more
+ * bring your own matchers. See https://deno.land/x/expect@v0.4.0/ for more
  * information.
  */
 export function expect(value: unknown) {
