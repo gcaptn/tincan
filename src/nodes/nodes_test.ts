@@ -22,7 +22,8 @@ node.finish()
 
 */
 
-import { expect, mock } from "../deps.ts";
+import { expect } from "expect";
+import { mock } from "expect-legacy";
 import { DescribeNode, RootNode } from "./nodes.ts";
 import { addDescribeNode, addItNode } from "../test_util.ts";
 

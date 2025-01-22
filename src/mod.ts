@@ -1,6 +1,9 @@
 import { TestFunction } from "./nodes/mod.ts";
 import { Environment } from "./environment.ts";
 
+export { expect } from "expect";
+export { mock } from "expect-legacy";
+
 const env = new Environment();
 
 /** Register a suite to group related tests. */
@@ -76,21 +79,3 @@ export function afterAll(fn: TestFunction) {
 export function run() {
   env.run();
 }
-
-import { expect as expect_, mock as mock_ } from "./deps.ts";
-
-/**
- * Matchers re-exported from allain/expect. These are not required to do
- * assertions in tincan, so you can use the standard library (std/testing) or
- * bring your own matchers. See https://deno.land/x/expect@v0.4.0/ for more
- * information.
- */
-export function expect(value: unknown) {
-  return expect_(value);
-}
-
-/**
- * Function mocking utilities re-exported from allain/expect. See
- * https://deno.land/x/expect@v0.2.9/ for more information.
- */
-export const mock = mock_;

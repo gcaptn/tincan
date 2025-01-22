@@ -1,4 +1,4 @@
-import { colors } from "./deps.ts";
+import * as colors from "colors";
 import {
   DescribeNode,
   getAncestry,

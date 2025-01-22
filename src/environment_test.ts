@@ -12,7 +12,7 @@ Environment
 
 import { Environment } from "./environment.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
-import { expect } from "./deps.ts";
+import { expect } from "expect";
 
 function noop() {}
 

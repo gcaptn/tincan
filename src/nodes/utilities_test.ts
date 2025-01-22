@@ -14,10 +14,10 @@ getAllCases
 
 */
 
+import { expect } from "expect";
 import { RootNode } from "./nodes.ts";
 import { Tree } from "./tree.ts";
 import { addDescribeNode, addItNode } from "../test_util.ts";
-import { expect } from "../deps.ts";
 import {
   findChildWithFirstCase,
   findChildWithLastCase,
