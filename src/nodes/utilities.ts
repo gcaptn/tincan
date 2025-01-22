@@ -4,7 +4,7 @@ type FindChildResult = ItNode | DescribeNode | undefined;
 
 function findChildWithCase(
   children: (ItNode | DescribeNode)[],
-  recursiveSearch: (node: (DescribeNode | RootNode)) => FindChildResult,
+  recursiveSearch: (node: DescribeNode | RootNode) => FindChildResult,
 ): FindChildResult {
   for (const child of children) {
     if (
