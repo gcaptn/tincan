@@ -1,4 +1,4 @@
-import { DescribeNode, ItNode, RootNode } from "./nodes.ts";
+import { DescribeNode, ItNode, type RootNode } from "./nodes.ts";
 
 type FindChildResult = ItNode | DescribeNode | undefined;
 

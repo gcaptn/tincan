@@ -16,7 +16,13 @@ Runner.runNode
 import { expect } from "expect";
 import { mock } from "expect-legacy";
 import { Runner } from "./runner.ts";
-import { Hook, ItNode, RootNode, TestFunction, Tree } from "./nodes/mod.ts";
+import {
+  Hook,
+  ItNode,
+  RootNode,
+  type TestFunction,
+  Tree,
+} from "./nodes/mod.ts";
 import { SilentReporter, silentTest } from "./test_util.ts";
 
 function makeTestRunner() {

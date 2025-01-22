@@ -1,4 +1,4 @@
-import { Hook, TestFunction, Tree } from "./nodes/mod.ts";
+import { Hook, type TestFunction, Tree } from "./nodes/mod.ts";
 import { Runner } from "./runner.ts";
 
 export class Environment {

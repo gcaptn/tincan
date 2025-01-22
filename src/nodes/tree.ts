@@ -4,7 +4,7 @@ import {
   Hook,
   ItNode,
   RootNode,
-  TestFunction,
+  type TestFunction,
 } from "./nodes.ts";
 
 export class Tree {

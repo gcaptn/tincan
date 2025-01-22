@@ -24,7 +24,7 @@ node.finish()
 
 import { expect } from "expect";
 import { mock } from "expect-legacy";
-import { DescribeNode, RootNode } from "./nodes.ts";
+import { type DescribeNode, RootNode } from "./nodes.ts";
 import { addDescribeNode, addItNode } from "../test_util.ts";
 
 Deno.test("node.skip() skips all of its children", () => {

@@ -21,7 +21,7 @@ calling a hook creator adds a hook to the current parent
 import { expect } from "expect";
 import { mock } from "expect-legacy";
 import { Tree } from "./tree.ts";
-import { ItNode } from "./nodes.ts";
+import type { ItNode } from "./nodes.ts";
 
 function noop() {}
 

@@ -3,11 +3,11 @@ import {
   findChildWithFirstCase,
   findChildWithLastCase,
   Hook,
-  ItNode,
+  type ItNode,
   RootNode,
-  TestFunction,
+  type TestFunction,
 } from "./nodes/mod.ts";
-import { Reporter, TestReporter } from "./reporter.ts";
+import { Reporter, type TestReporter } from "./reporter.ts";
 
 export class Runner {
   reporter: TestReporter = new Reporter();

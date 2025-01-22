@@ -1,4 +1,4 @@
-import { TestFunction } from "./nodes/mod.ts";
+import type { TestFunction } from "./nodes/mod.ts";
 import { Environment } from "./environment.ts";
 
 export { expect } from "expect";
@@ -15,12 +15,12 @@ export function describe(headline: string, fn: () => void) {
  * Run only this suite and skip all the other sibling test suites/cases. Will
  * not skip siblings that are also registered with `.only()`.
  */
-describe.only = function (headline: string, fn: () => void) {
+describe.only = function (headline: string, fn: () => void): void {
   env.describeOnly(headline, fn);
 };
 
 /** Skip this test suite. */
-describe.skip = function (headline: string, fn: () => void) {
+describe.skip = function (headline: string, fn: () => void): void {
   env.describeSkip(headline, fn);
 };
 
@@ -33,12 +33,12 @@ export function it(headline: string, fn: TestFunction) {
  * Run only this test case and skip all the other sibling test suites/cases.
  * Will not skip siblings that are also registered with `.only()`.
  */
-it.only = function (headline: string, fn: TestFunction) {
+it.only = function (headline: string, fn: TestFunction): void {
   env.itOnly(headline, fn);
 };
 
 /** Skip this test case. */
-it.skip = function (headline: string, fn: TestFunction) {
+it.skip = function (headline: string, fn: TestFunction): void {
   env.itSkip(headline, fn);
 };
 

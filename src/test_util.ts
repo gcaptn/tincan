@@ -1,5 +1,10 @@
-import { TestReporter } from "./reporter.ts";
-import { DescribeNode, ItNode, RootNode, TestFunction } from "./nodes/mod.ts";
+import type { TestReporter } from "./reporter.ts";
+import {
+  DescribeNode,
+  ItNode,
+  type RootNode,
+  type TestFunction,
+} from "./nodes/mod.ts";
 
 export class SilentReporter implements TestReporter {
   getTestCaseName = () => "";

@@ -2,9 +2,9 @@ import * as colors from "colors";
 import {
   DescribeNode,
   getAncestry,
-  Hook,
+  type Hook,
   ItNode,
-  RootNode,
+  type RootNode,
 } from "./nodes/mod.ts";
 
 export type TestReporter = {
