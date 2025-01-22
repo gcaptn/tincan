@@ -1,7 +1,4 @@
 {
-  "name": "@tincan/tincan",
-  "version": "1.0.3",
-  "license": "MIT",
   "exports": "./mod.ts",
   "imports": {
     "colors": "jsr:@std/fmt@^1.0.4/colors",

@@ -12,6 +12,11 @@
     <a href="https://deno.land/x/tincan"><img alt="deno.land/x" src="http://img.shields.io/badge/available%20on-deno.land/x-lightgrey.svg?logo=deno&labelColor=black" /></a>
 </p>
 
+## Deprecation
+
+See the standard library's BDD testing interface instead:
+https://jsr.io/@std/testing/doc/bdd
+
 ## Features
 
 - Nested suites / cases
